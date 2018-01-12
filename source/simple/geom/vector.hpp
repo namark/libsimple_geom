@@ -1,9 +1,7 @@
 #ifndef SIMPLE_GEOM_VECTOR_HPP
 #define SIMPLE_GEOM_VECTOR_HPP
 
-#include <array>
 #include <algorithm>
-#include <functional>
 #include <type_traits>
 #include <ostream>
 #include <numeric>
@@ -11,6 +9,7 @@
 #include "simple/support/logic.hpp"
 #include "simple/support/array.hpp"
 #include "simple/support/array_utils.hpp"
+#include "simple/support/array_operators.hpp"
 
 namespace simple::geom
 {
@@ -111,7 +110,7 @@ namespace simple::geom
 		}
 
 		template <typename Another>
-		Another mutantClone(const std::function<typename Another::coordinate_type(vector::coordinate_type)> & method) const&
+		Another mutantClone(typename Another::coordinate_type(*method)(const vector::coordinate_type&)) const&
 		{
 			static_assert(Another::dimensions == Dimensions, " Dimension mismatch. ");
 			Another another;
@@ -177,209 +176,56 @@ namespace simple::geom
 		typename array::iterator begin() noexcept { return std::begin(raw); }
 		typename array::iterator end() noexcept { return std::end(raw); }
 
-		vector& add(const Coordinate & scalar) const&
+		constexpr vector& min(const vector& other)
 		{
+			using std::min;
+			for(size_t i = 0; i < dimensions; ++i)
+				raw[i] = min(raw[i], other[i]);
+			return *this;
 		}
 
-		vector& add(const vector & another) const&
+		constexpr vector& max(const vector& other)
 		{
+			using std::max;
+			for(size_t i = 0; i < dimensions; ++i)
+				raw[i] = max(raw[i], other[i]);
+			return *this;
 		}
 
-		vector operator+(const Coordinate & scalar) const&
+		constexpr vector& clamp(const vector& lo, const vector& hi)
 		{
-			vector result;
-			std::transform(begin(), end(), result.begin(),
-					[&scalar](const Coordinate & coord){ return coord + scalar; } );
-			return result;
+			using std::clamp;
+			for(size_t i = 0; i < dimensions; ++i)
+				raw[i] = clamp(raw[i], lo[i], hi[i]);
+			return *this;
 		}
 
-		vector operator-(const Coordinate & scalar) const&
-		{
-			vector result;
-			std::transform(begin(), end(), result.begin(),
-					[&scalar](const Coordinate & coord){ return coord - scalar; } );
-			return result;
-		}
-
-		constexpr vector operator*(const Coordinate & scalar) const&
-		{
-			vector result{};
-			for(size_t i = 0; i < Dimensions; ++i)
-				result[i] = raw[i] * scalar;
-			// std::transform(begin(), end(), result.begin(),
-			// 		[&scalar](const Coordinate & coord){ return coord * scalar; } );
-			return result;
-		}
-
-		vector operator/(const Coordinate & scalar) const&
-		{
-			vector result;
-			std::transform(begin(), end(), result.begin(),
-					[&scalar](const Coordinate & coord){ return coord / scalar; } );
-			return result;
-		}
-
-		vector operator%(const Coordinate & scalar) const&
-		{
-			vector result;
-			std::transform(begin(), end(), result.begin(),
-					[&scalar](const Coordinate & coord){ return coord % scalar; } );
-			return result;
-		}
-
-		vector operator+(const vector & another) const&
-		{
-			vector result;
-			std::transform(begin(), end(), another.begin(), result.begin(), std::plus<>());
-			return result;
-		}
-
-		vector operator-(const vector & another) const&
-		{
-			vector result;
-			std::transform(begin(), end(), another.begin(), result.begin(), std::minus<>());
-			return result;
-		}
-
-		vector operator*(const vector & another) const&
-		{
-			vector result;
-			std::transform(begin(), end(), another.begin(), result.begin(), std::multiplies<>());
-			return result;
-		}
-
-		vector operator/(const vector & another) const&
-		{
-			vector result;
-			std::transform(begin(), end(), another.begin(), result.begin(), std::divides<>());
-			return result;
-		}
-
-		vector operator%(const vector & another) const&
-		{
-			vector result;
-			std::transform(begin(), end(), another.begin(), result.begin(), std::modulus<>());
-			return result;
-		}
-
-		vector operator-() const&
-		{
-			// return vector::zero - *this; // i wish
-			vector result;
-			std::transform(begin(), end(), result.begin(), std::negate<>());
-			return result;
-		}
-
-		vector & operator++()
+		constexpr vector & operator++()
 		{
 			for(auto& coord : raw) ++coord;
 			return *this;
 		}
 
-		vector & operator--()
+		constexpr vector & operator--()
 		{
 			for(auto& coord : raw) --coord;
 			return *this;
 		}
 
-		vector & operator+=(const Coordinate & scalar)
+		constexpr vector operator++(int) &
 		{
-			for(auto& coord : raw) coord += scalar;
-			return *this;
-		}
-
-		vector & operator-=(const Coordinate & scalar)
-		{
-			for(auto& coord : raw) coord -= scalar;
-			return *this;
-		}
-
-		vector & operator*=(const Coordinate & scalar)
-		{
-			for(auto& coord : raw) coord *= scalar;
-			return *this;
-		}
-
-		vector & operator/=(const Coordinate & scalar)
-		{
-			for(auto& coord : raw) coord /= scalar;
-			return *this;
-		}
-
-		vector & operator%=(const Coordinate & scalar)
-		{
-			for(auto& coord : raw) coord %= scalar;
-			return *this;
-		}
-
-		vector operator++(int) &
-		{
-			vector temp;
-			std::transform(begin(), end(), temp.begin(),
-					[](Coordinate & coord) { return coord++; });
-			// for(size_t i = 0; i < Dimensions; ++i) // better??
-			// 	temp.raw[i] = raw[i]++;
+			vector temp{};
+			for(size_t i = 0; i < Dimensions; ++i)
+				temp.raw[i] = raw[i]++;
 			return temp;
 		}
 
-		vector operator--(int) &
+		constexpr vector operator--(int) &
 		{
-			vector temp;
-			std::transform(begin(), end(), temp.begin(),
-					[](Coordinate & coord) { return coord--; });
-			// for(size_t i = 0; i < Dimensions; ++i) // better??
-			// 	temp.raw[i] = raw[i]--;
+			vector temp{};
+			for(size_t i = 0; i < Dimensions; ++i)
+				temp.raw[i] = raw[i]--;
 			return temp;
-		}
-
-		vector & operator+=(const vector & another)
-		{
-			// return *this = *this + another // keep wishing
-			for(size_t i = 0; i < Dimensions; ++i)
-			{
-				raw[i] += another.raw[i];
-			}
-			return *this;
-		}
-
-		vector & operator-=(const vector & another)
-		{
-			// return *this = *this - another // keep wishing
-			for(size_t i = 0; i < Dimensions; ++i)
-			{
-				raw[i] -= another.raw[i];
-			}
-			return *this;
-		}
-
-		vector & operator*=(const vector & another)
-		{
-			// return *this = *this * another // keep wishing
-			for(size_t i = 0; i < Dimensions; ++i)
-			{
-				raw[i] *= another.raw[i];
-			}
-			return *this;
-		}
-
-		vector & operator/=(const vector & another)
-		{
-			// return *this = *this / another // keep wishing
-			for(size_t i = 0; i < Dimensions; ++i)
-			{
-				raw[i] /= another.raw[i];
-			}
-			return *this;
-		}
-
-		vector & operator%=(const vector & another)
-		{
-			// return *this = *this / another // keep wishing
-			for(size_t i = 0; i < Dimensions; ++i)
-			{
-				raw[i] %= another.raw[i];
-			}
-			return *this;
 		}
 
 		template<typename AnotherComponent>
@@ -449,23 +295,47 @@ namespace simple::geom
 
 	};
 
-	template <typename Coordinate = float, size_t Dimensions = 2>
-	vector<Coordinate, Dimensions> operator+(const Coordinate & scalar, const vector<Coordinate, Dimensions> & pnt)
+	template <typename C, size_t D>
+	constexpr
+	vector<C,D> min(const vector<C,D> & one, const vector<C,D> & other)
 	{
-		vector<Coordinate, Dimensions> result;
-		std::transform(pnt.begin(), pnt.end(), result.begin(),
-				[&scalar](const Coordinate & coord){ return scalar + coord; } );
-		return result;
+		vector<C,D> result = one;
+		return result.min(other);
 	}
 
-	template <typename Coordinate = float, size_t Dimensions = 2>
-	vector<Coordinate, Dimensions> operator*(const Coordinate & scalar, const vector<Coordinate, Dimensions> & pnt)
+	template <typename C, size_t D>
+	constexpr
+	vector<C,D> max(const vector<C,D> & one, const vector<C,D> & other)
 	{
-		vector<Coordinate, Dimensions> result;
-		std::transform(pnt.begin(), pnt.end(), result.begin(),
-				[&scalar](const Coordinate & coord){ return scalar * coord; } );
-		return result;
+		vector<C,D> result = one;
+		return result.max(other);
 	}
+
+	template <typename C, size_t D>
+	constexpr
+	vector<C,D> clamp(vector<C,D> v, const vector<C,D> & lo, const vector<C,D> & hi)
+	{
+		v.clamp(lo, hi);
+		return v;
+	}
+
+	// for ADL to find these
+	using ::operator+;
+	using ::operator-;
+	using ::operator*;
+	using ::operator/;
+	using ::operator%;
+	using ::operator&;
+	using ::operator|;
+	using ::operator^;
+	using ::operator+=;
+	using ::operator-=;
+	using ::operator*=;
+	using ::operator/=;
+	using ::operator%=;
+	using ::operator&=;
+	using ::operator|=;
+	using ::operator^=;
 
 	template<typename Coordinate, size_t Dimensions>
 	std::ostream & operator<<(std::ostream & out, const vector<Coordinate, Dimensions> & vector)
@@ -474,9 +344,7 @@ namespace simple::geom
 
 		constexpr size_t last = Dimensions - 1;
 		for(size_t i = 0; i < last; ++i)
-		{
 			out << vector[i] << ", ";
-		}
 
 		out << vector[last] << ')';
 
@@ -491,9 +359,7 @@ namespace simple::geom
 		out << "\n";
 
 		for(size_t i = 0; i < M; ++i)
-		{
 			out << vector[i] << " \n";
-		}
 
 		for(size_t i = 0; i < N; ++i)
 			out << "---";
@@ -503,5 +369,19 @@ namespace simple::geom
 	}
 
 } // namespace simple::geom
+
+namespace simple
+{
+	template<typename C, size_t D>
+	struct support::define_array_operators<geom::vector<C,D>> :
+	public support::trivial_array_accessor<geom::vector<C,D>, geom::vector<C,D>::dimensions>
+	{
+		constexpr static auto enabled_operators = array_operator::all;
+		constexpr static auto enabled_right_element_operators = array_operator::binary | array_operator::in_place;
+		constexpr static auto enabled_left_element_operators = array_operator::binary
+			^ array_operator::lshift
+			^ array_operator::rshift;
+	};
+} // namespace simple
 
 #endif /* end of include guard */

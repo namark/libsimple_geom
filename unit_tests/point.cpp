@@ -1,14 +1,11 @@
 #include "simple/geom/vector.hpp"
 #include <cmath>
 #include <cassert>
+
 using namespace simple;
 using PointF4 = geom::vector<float, 4>;
 using Point4 = geom::vector<int, 4>;
 
-
-void EqualityComparison()
-{
-}
 
 void ZeroConstruction()
 {
@@ -31,6 +28,15 @@ void ZeroConstruction()
 	}
 	assert(anyGarbage);
 
+}
+
+void EqualityComparison()
+{
+	Point4 p(1, 2, 3, 4);
+	Point4 p2(1, 2, 3, 4);
+	Point4 p3(4, 3, 2, 1);
+	assert(p == p2);
+	assert(p != p3);
 }
 
 void OtherConstruction()
@@ -61,17 +67,13 @@ void OtherConstruction()
 	static_assert(Point4(0,0,0,1) == Point4::l(), "");
 }
 
-void Accessors()
-{
-}
-
 void Mutation()
 {
 	PointF4 p {1.3f, 1.5f, 2.1f, 4.6f};
 	Point4 p2 {1, 2, 2, 5};
 	Point4 p3 {1, 1, 2, 4};
-	assert( p2 == p.mutantClone<Point4>( [](float x) { return std::round(x); } ));
-	assert( p3 == p.mutantClone<Point4>( [](float x) { return x; } ));
+	assert( p2 == p.mutantClone<Point4>( [](auto x) -> int { return std::round(x); } ));
+	assert( p3 == p.mutantClone<Point4>( [](auto x) -> int { return x; } ));
 }
 
 void RangeBasedLooping()
@@ -105,6 +107,7 @@ void Arithmetic()
 	assert(p + p2 == sum);
 	assert(p + 1 == inc);
 	assert(p - 1 == dec);
+	assert(p - dec == PointF4::one());
 	assert(p - p2 == PointF4::zero());
 	assert(-p == PointF4(Point4(-1, -2, -3, -4)));
 
@@ -141,7 +144,8 @@ void Arithmetic()
 	assert( p * p == PointF4(1.0f, 4.0f, 9.0f, 16.0f));
 
 	assert( (p + p)/2 == p);
-	assert( p / p == PointF4(1.0f, 1.0f, 1.0f, 1.0f));
+	assert( p / (PointF4::one() * 2) == PointF4(0.5f, 1.0f, 1.5f, 2.0f) );
+	assert( p / p == PointF4::one());
 
 	p2 = p;
 	p2 *= 2;
@@ -152,10 +156,19 @@ void Arithmetic()
 	assert(p2 == p*2);
 	p2 /= 2;
 	assert(p2 == p);
+
+	p = {1.0f, 2.0f, 3.0f, 4.0f};
+	p2 = {1.0f, 0.0f, 1.0f, 0.0f};
+	PointF4 p3 = {1.0f, 2.0f, 0.0f, 1.0f};
+	assert(p%2 == p2);
+	p %= 3;
+	assert(p == p3);
+
 }
 
 void DiscreteArithmetic()
 {
+	// %
 	Point4 p(1, 2, 3, 4);
 	Point4 p2(1, 0, 1, 0);
 	Point4 p3(1, 2, 0, 1);
@@ -170,21 +183,96 @@ void DiscreteArithmetic()
 	p3 %= p2;
 	assert(p3 == p);
 
-	//<<
-	//>>
-	//<<=
-	//>>=
-	//&
-	//&=
-	//|
-	//|=
-	//^
-	//^=
-	//~
+	// <<
+	p = {0xA, 0xB0, 0xC00, 0xD000};
+	p2 = {0xA0, 0xB00, 0xC000, 0xD0000};
+	assert((p << 4) == p2);
+	p <<= 4;
+	assert(p == p2);
+
+	p = {0xA, 0xB0, 0xC00, 0xD000};
+	p2 = {0xA, 0xB, 0xC, 0xD};
+	p3 = {0, 1, 2, 3};
+	assert((p2 << (p3*4)) == p);
+	p2 <<= (p3*4);
+	assert(p2 == p);
+
+	// >>
+	p = {0xA, 0xB0, 0xC00, 0xD000};
+	p2 = {0xA0, 0xB00, 0xC000, 0xD0000};
+	assert((p2 >> 4) == p);
+	p2 >>= 4;
+	assert(p == p2);
+
+	p = {0xA, 0xB0, 0xC00, 0xD000};
+	p2 = {0xA, 0xB, 0xC, 0xD};
+	p3 = {0, 1, 2, 3};
+	assert((p >> (p3*4)) == p2);
+	p >>= (p3*4);
+	assert(p == p2);
+
+	// &
+	p =  {0b0101, 0b1010, 0b1111, 0b0000};
+	p2 = {0b0101, 0b0000, 0b0101, 0b0000};
+	assert((p & 0b101) == p2);
+	p &= 0b0101;
+	assert(p == p2);
+
+	p =  {0b0101, 0b1010, 0b1111, 0b0000};
+	p2 = {0b0110, 0b0111, 0b1001, 0b1111};
+	p3 = {0b0100, 0b0010, 0b1001, 0b0000};
+	assert((p & p2) == p3);
+	p &= p2;
+	assert(p == p3);
+
+	// |
+	p =  {0b0101, 0b1010, 0b1111, 0b0000};
+	p2 = {0b0101, 0b1111, 0b1111, 0b0101};
+	assert((p | 0b0101) == p2);
+	p |= 0b0101;
+	assert(p == p2);
+
+	p =  {0b0101, 0b1010, 0b1111, 0b0000};
+	p2 = {0b0110, 0b0111, 0b1001, 0b1111};
+	p3 = {0b0111, 0b1111, 0b1111, 0b1111};
+	assert((p | p2) == p3);
+	p |= p2;
+	assert(p == p3);
+
+	// ^
+	p =  {0b0101, 0b1010, 0b1111, 0b0000};
+	p2 = {0b0000, 0b1111, 0b1010, 0b0101};
+	assert((p ^ 0b0101) == p2);
+	p ^= 0b0101;
+	assert(p == p2);
+
+	p =  {0b0101, 0b1010, 0b1111, 0b0000};
+	p2 = {0b0110, 0b0111, 0b1001, 0b1111};
+	p3 = {0b0011, 0b1101, 0b0110, 0b1111};
+	assert((p ^ p2) == p3);
+	p ^= p2;
+	assert(p == p3);
+
+	// ~
+	p =                            {0b0101, 0b1010, 0b1111, 0b0000};
+	assert( (~p & 0b1111) == Point4(0b1010, 0b0101, 0b0000, 0b1111));
 }
 
-// edge cases
+void Algorithms()
+{
 
+	Point4 p (1, 2, 3, 4);
+	Point4 p2 (4, 3, 2, 1);
+	assert( Point4(1, 2, 2, 1) == geom::min(p, p2) );
+	assert( Point4(4, 3, 3, 4) == geom::max(p, p2) );
+
+	p = -p;
+	assert( Point4(-1, 2, 2, -3) == geom::clamp(Point4(-10, 2, 3, -3), p, p2) );
+	assert( Point4(0, -2, -1, 1) == geom::clamp(Point4(0, -3, -1, 10), p, p2) );
+	assert( Point4(3, -1, -2, 0) == geom::clamp(Point4(3, -1, -2, 0), p, p2) );
+	assert( Point4(-1, 3, -3, 1) == geom::clamp(Point4(-3, 7, -5, 3), p, p2) );
+
+}
 
 void Constexprness()
 {
@@ -201,14 +289,14 @@ void Constexprness()
 
 int main()
 {
-	EqualityComparison();
 	ZeroConstruction();
+	EqualityComparison();
 	OtherConstruction();
-	Accessors();
 	Mutation();
 	RangeBasedLooping();
 	Arithmetic();
 	DiscreteArithmetic();
+	Algorithms();
 	Constexprness();
 	return 0;
 }
