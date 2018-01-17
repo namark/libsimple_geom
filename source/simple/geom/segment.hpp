@@ -40,7 +40,7 @@ namespace simple::geom
 		constexpr operator typename base::range()
 		{
 			auto lower = this->position -
-				static_cast<Type&>(anchor * static_cast<AnchorType&>(this->size));
+				static_cast<Type>(anchor * static_cast<AnchorType>(this->size));
 			return typename base::range{lower, lower + this->size};
 		}
 	};
