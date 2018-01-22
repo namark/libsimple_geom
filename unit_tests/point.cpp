@@ -274,6 +274,14 @@ void Algorithms()
 
 }
 
+int PotentiallyAmbigous(geom::vector<int, 2>){ return 2; }
+int PotentiallyAmbigous(geom::vector<int, 3>){ return 3; }
+void DisabiguateOnConstructorParameterCount()
+{
+	assert( PotentiallyAmbigous({1,2,3}) == 3 );
+	PotentiallyAmbigous({1,2});
+}
+
 void Constexprness()
 {
 	constexpr Point4 p = Point4(1,2,3,4);
@@ -297,6 +305,7 @@ int main()
 	Arithmetic();
 	DiscreteArithmetic();
 	Algorithms();
+	DisabiguateOnConstructorParameterCount();
 	Constexprness();
 	return 0;
 }

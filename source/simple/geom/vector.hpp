@@ -68,12 +68,11 @@ namespace simple::geom
 		vector() = default;
 
 		template <typename... Coordinates,
-				 typename support::enable_if_all<std::is_convertible<Coordinates, Coordinate>::value...> *...>
+				 typename std::enable_if_t<sizeof...(Coordinates) == Dimensions> * = nullptr,
+				 typename support::enable_if_all<std::is_convertible<Coordinates, Coordinate>::value...> * = nullptr>
 		constexpr vector(Coordinates&&... coordinates)
 			: raw {std::forward<Coordinates>(coordinates)...}
-		{
-			static_assert(sizeof...(Coordinates) == Dimensions, " Dimension mismatch. ");
-		}
+		{}
 
 		template <typename Another,
 				 typename support::enable_if_all<
