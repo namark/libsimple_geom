@@ -76,12 +76,12 @@ namespace simple::geom
 
 		template <typename Another,
 				 typename support::enable_if_all<
+					Another::dimensions == Dimensions,
 				 	!std::is_same<Another, vector>::value,
 				 	std::is_convertible<typename Another::coordinate_type, Coordinate>::value >
 					*...>
 		explicit vector(const Another& another)
 		{
-			static_assert(Another::dimensions == Dimensions, " Dimension mismatch. ");
 			std::copy(another.begin(), another.end(), begin());
 		}
 
