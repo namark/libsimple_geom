@@ -76,6 +76,19 @@ void Mutation()
 	assert( p3 == p.mutantClone<Point4>( [](auto x) -> int { return x; } ));
 }
 
+void Mixing()
+{
+	Point4 p {1, 2, 3, 4};
+	assert( (geom::vector<int, 2>{1,2} == p.mix<0,1>()) );
+	assert( (geom::vector<int, 2>{1,2} == p.mix<2>({0,1})) );
+	assert( (geom::vector<int, 3>{2,3,4} == p.mix<1,2,3>()) );
+	assert( (geom::vector<int, 3>{2,3,4} == p.mix<3>({1,2,3})) );
+	assert( (geom::vector<int, 6>{3,3,3,2,2,1} == p.mix<2,2,2,1,1,0>()) );
+	assert( (geom::vector<int, 6>{3,3,3,2,2,1} == p.mix<6>({2,2,2,1,1,0})) );
+	assert( (geom::vector<int, 3>{1,2,0} == p.mix<0,1,4>(0)) );
+	assert( (geom::vector<int, 3>{1,2,0} == p.mix<3>({0,1,4}, 0)) );
+}
+
 void RangeBasedLooping()
 {
 	const PointF4 p{1.0f, 2.0f, 3.0f, 4.0f};
@@ -301,6 +314,7 @@ int main()
 	EqualityComparison();
 	OtherConstruction();
 	Mutation();
+	Mixing();
 	RangeBasedLooping();
 	Arithmetic();
 	DiscreteArithmetic();

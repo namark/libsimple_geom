@@ -63,6 +63,38 @@ namespace simple::geom
 			return (i == dimension) ? value_type{1} : value_type{};
 		}
 
+		template<typename Vector, size_t n>
+		constexpr void set_mixed_index(Vector&) const
+		{}
+
+		template<typename Vector, size_t n>
+		constexpr void set_mixed_index(Vector&, const Coordinate&) const
+		{}
+
+		template<typename Vector, size_t n, size_t index, size_t... Rest>
+		constexpr void set_mixed_index(Vector& vec) const
+		{
+			static_assert(index < dimensions, " Invalid mix index. ");
+			vec[n] = raw[index];
+			set_mixed_index<Vector, n+1, Rest...>(vec);
+		}
+
+		template<typename Vector, size_t n, size_t index, size_t... Rest,
+		std::enable_if_t<index < Dimensions>* = nullptr>
+		constexpr void set_mixed_index(Vector& vec, const Coordinate& default_value) const
+		{
+			vec[n] = raw[index];
+			set_mixed_index<Vector, n+1, Rest...>(vec, default_value);
+		}
+
+		template<typename Vector, size_t n, size_t index, size_t... Rest,
+		std::enable_if_t<index >= Dimensions>* = nullptr>
+		constexpr void set_mixed_index(Vector& vec, const Coordinate& default_value) const
+		{
+			vec[n] = default_value;
+			set_mixed_index<Vector, n+1, Rest...>(vec, default_value);
+		}
+
 		public:
 
 		vector() = default;
@@ -105,6 +137,50 @@ namespace simple::geom
 			Another another;
 			std::transform(begin(), end(), another.begin(), method);
 			return another;
+		}
+
+		template<size_t... CoordinateIndices, typename Mixed = vector<Coordinate, sizeof...(CoordinateIndices)> >
+		constexpr Mixed mix() const
+		{
+			Mixed result{};
+			set_mixed_index<Mixed, 0, CoordinateIndices...>(result);
+			return result;
+		}
+
+		template<size_t... CoordinateIndices, typename Mixed = vector<Coordinate, sizeof...(CoordinateIndices)> >
+		constexpr Mixed mix(const Coordinate& default_value) const
+		{
+			Mixed result{};
+			set_mixed_index<Mixed, 0, CoordinateIndices...>(result, default_value);
+			return result;
+		}
+
+		template <size_t N, typename Mixed = vector<Coordinate, N>>
+		constexpr Mixed mix(const support::array<Coordinate,N>& indices) const
+		{
+			Mixed result{};
+			size_t index{};
+			for(size_t i = 0; i < N; ++i)
+			{
+				index = indices[i];
+				if(index >= Dimensions)
+					throw std::logic_error("simple::geom::vector invalid mix index");
+				result[i] = raw[index];
+			}
+			return result;
+		}
+
+		template <size_t N, typename Mixed = vector<Coordinate, N>>
+		constexpr Mixed mix(const support::array<Coordinate,N>& indices, const Coordinate& default_value) const
+		{
+			Mixed result{};
+			size_t index{};
+			for(size_t i = 0; i < N; ++i)
+			{
+				index = indices[i];
+				result[i] = index < Dimensions ? raw[index] : default_value;
+			}
+			return result;
 		}
 
 		constexpr bool operator==(const vector & another) const
@@ -280,6 +356,21 @@ namespace simple::geom
 		{
 			static_assert( Dimensions > w_index );
 			return raw[w_index];
+		}
+
+		constexpr vector<Coordinate,2> xy() const
+		{
+			return mix<x_index, y_index>();
+		}
+
+		constexpr vector<Coordinate,3> xyz() const
+		{
+			return mix<x_index, y_index, z_index>();
+		}
+
+		constexpr vector<Coordinate,3> xyz(const Coordinate& default_value) const
+		{
+			return mix<x_index, y_index, z_index>(default_value);
 		}
 
 	};
