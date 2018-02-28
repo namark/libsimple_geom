@@ -77,7 +77,7 @@ namespace simple::geom
 		template <typename Another,
 				 typename support::enable_if_all<
 					Another::dimensions == Dimensions,
-				 	!std::is_same<Another, vector>::value,
+				 	!std::is_same<Another, vector>::value && !std::is_base_of<vector, Another>::value,
 				 	std::is_convertible<typename Another::coordinate_type, Coordinate>::value >
 					*...>
 		explicit vector(const Another& another)
