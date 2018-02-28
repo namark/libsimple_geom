@@ -93,19 +93,9 @@ namespace simple::geom
 		{
 		}
 
-		explicit operator const array & () const noexcept
+		explicit operator const array () const noexcept
 		{
 			return raw;
-		}
-
-		explicit operator array & () noexcept
-		{
-			return raw;
-		}
-
-		explicit operator array && () && noexcept
-		{
-			return std::move(raw);
 		}
 
 		template <typename Another>

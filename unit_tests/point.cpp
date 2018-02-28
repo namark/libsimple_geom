@@ -13,10 +13,10 @@ void ZeroConstruction()
 	PointF4 p{};
 	PointF4 p2 = {};
 	PointF4 p3 = PointF4();
-	assert(control == static_cast<const PointF4::array&>(p));
-	assert(control == static_cast<const PointF4::array&>(p2));
-	assert(control == static_cast<const PointF4::array&>(p3));
-	assert(control == static_cast<const PointF4::array&>(PointF4::zero()));
+	assert(control == static_cast<const PointF4::array>(p));
+	assert(control == static_cast<const PointF4::array>(p2));
+	assert(control == static_cast<const PointF4::array>(p3));
+	assert(control == static_cast<const PointF4::array>(PointF4::zero()));
 
 	// NOTE: can't really test for random garbage since random garbage can be anything, including all zeros
 	bool anyGarbage = false;
