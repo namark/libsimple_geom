@@ -236,10 +236,10 @@ namespace simple::geom
 		}
 
 		// NOTE: not sure about these
-		typename array::const_iterator begin() const noexcept { return std::begin(raw); }
-		typename array::const_iterator end() const noexcept { return std::end(raw); }
-		typename array::iterator begin() noexcept { return std::begin(raw); }
-		typename array::iterator end() noexcept { return std::end(raw); }
+		constexpr typename array::const_iterator begin() const noexcept { return std::begin(raw); }
+		constexpr typename array::const_iterator end() const noexcept { return std::end(raw); }
+		constexpr typename array::iterator begin() noexcept { return std::begin(raw); }
+		constexpr typename array::iterator end() noexcept { return std::end(raw); }
 
 		constexpr vector& min(const vector& other)
 		{
@@ -463,5 +463,33 @@ namespace simple
 			^ array_operator::rshift;
 	};
 } // namespace simple
+
+template<typename T, size_t C>
+class std::numeric_limits<simple::geom::vector<T,C>>
+{
+	using vec = simple::geom::vector<T,C>;
+	using limits = std::numeric_limits<T>;
+	public:
+	constexpr static bool is_specialized = limits::is_specialized;
+
+	constexpr static vec min()
+	{
+		static_assert(limits::is_specialized);
+		vec m{};
+		for(auto&& c : m)
+			c = limits::min();
+		return m;
+	}
+
+	constexpr static vec max()
+	{
+		static_assert(limits::is_specialized);
+		vec m{};
+		for(auto&& c : m)
+			c = limits::max();
+		return m;
+	}
+};
+
 
 #endif /* end of include guard */

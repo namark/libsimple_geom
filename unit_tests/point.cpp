@@ -295,7 +295,16 @@ void DisabiguateOnConstructorParameterCount()
 	PotentiallyAmbigous({1,2});
 }
 
-void Constexprness()
+void NumericLimits()
+{
+	using limits = std::numeric_limits<Point4>;
+	using coordLimits = std::numeric_limits<Point4::coordinate_type>;
+	static_assert(limits::is_specialized);
+	static_assert(limits::max() == Point4::one()*coordLimits::max());
+	static_assert(limits::min() == Point4::one()*coordLimits::min());
+}
+
+constexpr void Constexprness() // TODO: needs better coverage
 {
 	constexpr Point4 p = Point4(1,2,3,4);
 	constexpr std::array<int, p[2]> arr = {1,2,3};
@@ -320,6 +329,7 @@ int main()
 	DiscreteArithmetic();
 	Algorithms();
 	DisabiguateOnConstructorParameterCount();
+	NumericLimits();
 	Constexprness();
 	return 0;
 }
