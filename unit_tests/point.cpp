@@ -304,6 +304,28 @@ void NumericLimits()
 	static_assert(limits::min() == Point4::one()*coordLimits::min());
 }
 
+void CoordinateOrder()
+{
+	geom::vector<int, 4, std::index_sequence<3,2,1,0>> p_wzyx(1,2,3,4);
+	assert( p_wzyx.x() == 4 );
+	assert( p_wzyx.y() == 3 );
+	assert( p_wzyx.z() == 2 );
+	assert( p_wzyx.w() == 1 );
+	assert( p_wzyx.get<0>() == 4 );
+	assert( p_wzyx.get<1>() == 3 );
+	assert( p_wzyx.get<2>() == 2 );
+	assert( p_wzyx.get<3>() == 1 );
+	assert( p_wzyx[p_wzyx.x_index] == 4 );
+	assert( p_wzyx[p_wzyx.y_index] == 3 );
+	assert( p_wzyx[p_wzyx.z_index] == 2 );
+	assert( p_wzyx[p_wzyx.w_index] == 1 );
+	assert( p_wzyx[0] == 1 );
+	assert( p_wzyx[1] == 2 );
+	assert( p_wzyx[2] == 3 );
+	assert( p_wzyx[3] == 4 );
+	assert( Point4(p_wzyx) == Point4(4,3,2,1) );
+}
+
 constexpr void Constexprness() // TODO: needs better coverage
 {
 	constexpr Point4 p = Point4(1,2,3,4);
@@ -330,6 +352,7 @@ int main()
 	Algorithms();
 	DisabiguateOnConstructorParameterCount();
 	NumericLimits();
+	CoordinateOrder();
 	Constexprness();
 	return 0;
 }

@@ -7,6 +7,7 @@
 #include <numeric>
 
 #include "simple/support/logic.hpp"
+#include "simple/support/carcdr.hpp"
 #include "simple/support/array.hpp"
 #include "simple/support/array_utils.hpp"
 #include "simple/support/array_operators.hpp"
@@ -14,12 +15,15 @@
 namespace simple::geom
 {
 
-	template <typename Coordinate = float, size_t Dimensions = 2>
+	template <typename Coordinate = float, size_t Dimensions = 2,
+			 typename Order = std::make_index_sequence<Dimensions>,
+			 std::enable_if_t<Order::size() == Dimensions>* = nullptr>
 	class vector
 	{
 		public:
 		using array = support::array<Coordinate, Dimensions>;
 		using coordinate_type = Coordinate;
+		using order = Order;
 		using value_type = Coordinate;
 		static constexpr size_t dimensions = Dimensions;
 
@@ -28,10 +32,12 @@ namespace simple::geom
 
 		enum : size_t
 		{
-			x_index,
-			y_index,
-			z_index,
-			w_index
+			non_index = std::numeric_limits<size_t>::max(),
+			new_index = non_index,
+			x_index = support::car<Order, 0>(non_index),
+			y_index = support::car<Order, 1>(non_index),
+			z_index = support::car<Order, 2>(non_index),
+			w_index = support::car<Order, 3>(non_index)
 		};
 
 		template <size_t index>
@@ -95,6 +101,22 @@ namespace simple::geom
 			set_mixed_index<Vector, n+1, Rest...>(vec, default_value);
 		}
 
+		template <typename Another, std::enable_if_t<
+			Another::dimensions == Dimensions
+			&& !std::is_same<Another, vector>::value
+			&& !std::is_base_of<vector, Another>::value
+			&& std::is_convertible<typename Another::coordinate_type, Coordinate>::value
+		>* = nullptr>
+		struct is_convertible_to_me {};
+
+		template <typename Another, size_t dimension = Dimensions - 1>
+		constexpr void set_in_order(const Another& another)
+		{
+			if constexpr (dimension > 0)
+				set_in_order<Another, dimension - 1>(another);
+			get<dimension>() = another.template get<dimension>();
+		}
+
 		public:
 
 		vector() = default;
@@ -106,15 +128,18 @@ namespace simple::geom
 			: raw {std::forward<Coordinates>(coordinates)...}
 		{}
 
-		template <typename Another,
-				 typename support::enable_if_all<
-					Another::dimensions == Dimensions,
-				 	!std::is_same<Another, vector>::value && !std::is_base_of<vector, Another>::value,
-				 	std::is_convertible<typename Another::coordinate_type, Coordinate>::value >
-					*...>
+		template <typename Another, is_convertible_to_me<Another>* = nullptr,
+		std::enable_if_t<std::is_same_v<typename Another::order, Order>> *...>
 		explicit vector(const Another& another)
 		{
 			std::copy(another.begin(), another.end(), begin());
+		}
+
+		template <typename Another, is_convertible_to_me<Another>* = nullptr,
+	 	std::enable_if_t<!std::is_same_v<typename Another::order, Order>> *...>
+		constexpr explicit vector(const Another& another) : raw{}
+		{
+			set_in_order<Another>(another);
 		}
 
 		explicit constexpr vector(const array & coordinates) : raw(coordinates)
@@ -223,6 +248,22 @@ namespace simple::geom
 			for(size_t i = 0; i < Dimensions; ++i)
 				ret = ret && (raw[i] <= another.raw[i]);
 			return ret;
+		}
+
+		template <size_t dimension>
+		constexpr const coordinate_type & get() const&
+		{
+			static_assert(dimension < Dimensions);
+			constexpr size_t index = support::car<Order, dimension>();
+			return raw[index];
+		}
+
+		template <size_t dimension>
+		constexpr coordinate_type & get() &
+		{
+			static_assert(dimension < Dimensions);
+			constexpr size_t index = support::car<Order, dimension>();
+			return raw[index];
 		}
 
 		constexpr const coordinate_type & operator[](size_t dimension) const&
@@ -375,25 +416,25 @@ namespace simple::geom
 
 	};
 
-	template <typename C, size_t D>
+	template <typename C, size_t D, typename O>
 	constexpr
-	vector<C,D> min(const vector<C,D> & one, const vector<C,D> & other)
+	vector<C,D,O> min(const vector<C,D,O> & one, const vector<C,D,O> & other)
 	{
-		vector<C,D> result = one;
+		auto result = one;
 		return result.min(other);
 	}
 
-	template <typename C, size_t D>
+	template <typename C, size_t D, typename O>
 	constexpr
-	vector<C,D> max(const vector<C,D> & one, const vector<C,D> & other)
+	vector<C,D,O> max(const vector<C,D,O> & one, const vector<C,D,O> & other)
 	{
-		vector<C,D> result = one;
+		auto result = one;
 		return result.max(other);
 	}
 
-	template <typename C, size_t D>
+	template <typename C, size_t D, typename O>
 	constexpr
-	vector<C,D> clamp(vector<C,D> v, const vector<C,D> & lo, const vector<C,D> & hi)
+	vector<C,D,O> clamp(vector<C,D,O> v, const vector<C,D,O> & lo, const vector<C,D,O> & hi)
 	{
 		v.clamp(lo, hi);
 		return v;
@@ -431,8 +472,8 @@ namespace simple::geom
 		return out;
 	}
 
-	template<typename Coordinate, size_t N, size_t M>
-	std::ostream & operator<<(std::ostream & out, const vector<vector<Coordinate, N>, M> & vector)
+	template<typename Coordinate, size_t N, size_t M, typename O1, typename O2>
+	std::ostream & operator<<(std::ostream & out, const vector<vector<Coordinate, N, O1>, M, O2> & vector)
 	{
 		for(size_t i = 0; i < N; ++i)
 			out << "---";
@@ -452,9 +493,9 @@ namespace simple::geom
 
 namespace simple
 {
-	template<typename C, size_t D>
-	struct support::define_array_operators<geom::vector<C,D>> :
-	public support::trivial_array_accessor<geom::vector<C,D>, geom::vector<C,D>::dimensions>
+	template<typename C, size_t D, typename O>
+	struct support::define_array_operators<geom::vector<C,D,O>> :
+	public support::trivial_array_accessor<geom::vector<C,D,O>, geom::vector<C,D,O>::dimensions>
 	{
 		constexpr static auto enabled_operators = array_operator::all;
 		constexpr static auto enabled_right_element_operators = array_operator::binary | array_operator::in_place;
@@ -464,10 +505,10 @@ namespace simple
 	};
 } // namespace simple
 
-template<typename T, size_t C>
-class std::numeric_limits<simple::geom::vector<T,C>>
+template<typename T, size_t C, typename O>
+class std::numeric_limits<simple::geom::vector<T,C,O>>
 {
-	using vec = simple::geom::vector<T,C>;
+	using vec = simple::geom::vector<T,C,O>;
 	using limits = std::numeric_limits<T>;
 	public:
 	constexpr static bool is_specialized = limits::is_specialized;
