@@ -29,6 +29,7 @@ namespace simple::geom
 
 		static constexpr vector zero() { return vector{}; }
 		static constexpr vector one() { return vector{support::filled_array<Dimensions>(value_type{1})}; }
+		static constexpr vector one(const Coordinate& scaler) { return vector{support::filled_array<Dimensions>(scaler)}; }
 
 		enum : size_t
 		{
@@ -43,14 +44,39 @@ namespace simple::geom
 		template <size_t index>
 		static constexpr vector unit()
 		{
+			return unit<index>(Coordinate{1});
+		}
+
+		template <size_t index>
+		static constexpr vector unit(const Coordinate& one)
+		{
+			return unit<index>(one, Coordinate{});
+		}
+
+		template <size_t index>
+		static constexpr vector unit(const Coordinate& one, const Coordinate& zero)
+		{
 			static_assert(index < dimensions, "");
-			return vector{support::make_array<dimensions>(init_unit<index>)};
+			return vector{support::make_array<dimensions>([one, zero](size_t i)
+				{ return index == i ? one : zero; } )};
 		}
 
 		static constexpr vector unit(size_t index)
 		{
+			return unit(index, Coordinate{1});
+		}
+
+		static constexpr vector unit(size_t index, const Coordinate& one)
+		{
 			vector ret{};
-			ret[index] = value_type{1};
+			ret[index] = one;
+			return ret;
+		}
+
+		static constexpr vector unit(size_t index, const Coordinate& one, const Coordinate& zero)
+		{
+			vector ret = vector::one(zero);
+			ret[index] = one;
 			return ret;
 		}
 
@@ -58,16 +84,14 @@ namespace simple::geom
 		static constexpr vector j() { return unit<y_index>(); }
 		static constexpr vector k() { return unit<z_index>(); }
 		static constexpr vector l() { return unit<w_index>(); }
+		static constexpr vector i(const Coordinate& scaler) { return unit<x_index>(scaler); }
+		static constexpr vector j(const Coordinate& scaler) { return unit<y_index>(scaler); }
+		static constexpr vector k(const Coordinate& scaler) { return unit<z_index>(scaler); }
+		static constexpr vector l(const Coordinate& scaler) { return unit<w_index>(scaler); }
 
 		private:
 		// Coordinate raw[Dimensions];
 		array raw;
-
-		template <size_t dimension>
-		static constexpr value_type init_unit(size_t i)
-		{
-			return (i == dimension) ? value_type{1} : value_type{};
-		}
 
 		template<typename Vector, size_t n>
 		constexpr void set_mixed_index(Vector&) const

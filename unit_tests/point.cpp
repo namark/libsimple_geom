@@ -60,11 +60,17 @@ void OtherConstruction()
 	assert(p8 == p9);
 	assert(p9 != PointF4::zero());
 	static_assert(Point4(1,1,1,1) == Point4::one(), "");
+	static_assert(Point4(4,4,4,4) == Point4::one(4), "");
 	static_assert(PointF4(1.0f,1.0f,1.0f,1.0f) == PointF4::one(), "");
 	static_assert(Point4(1,0,0,0) == Point4::i(), "");
 	static_assert(Point4(0,1,0,0) == Point4::j(), "");
 	static_assert(Point4(0,0,1,0) == Point4::k(), "");
 	static_assert(Point4(0,0,0,1) == Point4::l(), "");
+	static_assert(Point4(4,0,0,0) == Point4::i(4), "");
+	static_assert(Point4(0,4,0,0) == Point4::j(4), "");
+	static_assert(Point4(0,0,4,0) == Point4::k(4), "");
+	static_assert(Point4(0,0,0,4) == Point4::l(4), "");
+	static_assert(Point4(-1,1,-1,-1) == Point4::unit<1>(1,-1), "");
 }
 
 void Mutation()
