@@ -300,11 +300,19 @@ namespace simple::geom
 			return raw[dimension];
 		}
 
-		// NOTE: not sure about these
-		constexpr typename array::const_iterator begin() const noexcept { return std::begin(raw); }
-		constexpr typename array::const_iterator end() const noexcept { return std::end(raw); }
-		constexpr typename array::iterator begin() noexcept { return std::begin(raw); }
-		constexpr typename array::iterator end() noexcept { return std::end(raw); }
+		constexpr auto begin() noexcept { return std::begin(raw); }
+		constexpr auto end() noexcept { return std::end(raw); }
+		constexpr auto begin() const noexcept { return std::cbegin(raw); }
+		constexpr auto end() const noexcept { return std::cend(raw); }
+		constexpr auto cbegin() const noexcept { return std::cbegin(raw); }
+		constexpr auto cend() const noexcept { return std::cend(raw); }
+
+		constexpr auto rbegin() noexcept { return std::rbegin(raw); }
+		constexpr auto rend() noexcept { return std::rend(raw); }
+		constexpr auto rbegin() const noexcept { return std::crbegin(raw); }
+		constexpr auto rend() const noexcept { return std::crend(raw); }
+		constexpr auto crbegin() const noexcept { return std::crbegin(raw); }
+		constexpr auto crend() const noexcept { return std::crend(raw); }
 
 		constexpr vector& min(const vector& other)
 		{
