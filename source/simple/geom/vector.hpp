@@ -366,22 +366,25 @@ namespace simple::geom
 			return temp;
 		}
 
-		template<typename AnotherComponent>
-		Coordinate operator()(const vector<AnotherComponent, Dimensions> & another) const
-		{
-			return std::inner_product(begin(), end(), another.begin(), Coordinate());
-		}
+		template <typename T, typename = std::nullptr_t>
+		struct can_apply_s { constexpr static bool value = false; };
+		template <typename T>
+		struct can_apply_s<T, decltype(std::declval<vector>()(std::declval<T>()), nullptr)> { constexpr static bool value = true; };
+		template <typename T>
+		constexpr static bool can_apply = can_apply_s<T>::value;
 
-		// template <size_t N, size_t M>
-		// vector<vectorT<N>,Dimensions> operator()(const vector<vectorT<N>,M> & another) const
-		// {
-		// 	vector<vectorT<N>,Dimensions> temp;
-		// 	for(size_t i = 0; i < Dimensions; i++)
-		// 	{
-		// 		temp[i] = (*this)[i](another);
-		// 	}
-		// 	return temp;
-		// }
+		// square matrix multiplication and matrix-vector multiplication/dot product fusion mutant operator
+		template<typename AnotherComponent, typename Return = std::conditional_t<can_apply<AnotherComponent>, vector, Coordinate>>
+		constexpr Return operator()(const vector<AnotherComponent, Dimensions> & another) const
+		{
+			Return ret{};
+			for(size_t i = 0; i < Dimensions; ++i)
+				if constexpr (can_apply<AnotherComponent>)
+					ret[i] = (*this)(another[i]);
+				else
+					ret += (*this)[i] * another[i];
+			return ret;
+		}
 
 		constexpr Coordinate& x()
 		{
@@ -490,8 +493,8 @@ namespace simple::geom
 	using ::operator|=;
 	using ::operator^=;
 
-	template<typename Coordinate, size_t Dimensions>
-	std::ostream & operator<<(std::ostream & out, const vector<Coordinate, Dimensions> & vector)
+	template<typename Coordinate, size_t Dimensions, typename Order>
+	std::ostream & operator<<(std::ostream & out, const vector<Coordinate, Dimensions, Order> & vector)
 	{
 		out << '(';
 
