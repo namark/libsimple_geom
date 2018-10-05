@@ -1,3 +1,3 @@
 ## Dependencies
-[libsimple_support](https://github.com/namark/libsimple_support)
+[libsimple_support](https://notabug.org/namark/libsimple_support)
 
