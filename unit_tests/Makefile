@@ -14,6 +14,8 @@ run: $(RUNS)
 
 build: $(TARGETS)
 
+$(TEMPDIR)/vector.run: matrix.data matrix_vector.data dot_product.data
+
 $(TEMPDIR)/%.run: %.test
 	./$<
 	@echo "This is a dummy file for make to keep track of test runs" > $@
@@ -23,6 +25,9 @@ $(TEMPDIR)/%.run: %.test
 
 $(TEMPDIR)/%.o: %.cpp | $(TEMPDIR)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c $<
+
+%.data: %.octave
+	octave -q $< | sed 's/[ABans=]//g' > $@
 
 $(TEMPDIR):
 	@mkdir $@
