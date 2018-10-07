@@ -3,27 +3,27 @@
 #include <cassert>
 
 using namespace simple;
-using PointF4 = geom::vector<float, 4>;
-using Point4 = geom::vector<int, 4>;
+using float4 = geom::vector<float, 4>;
+using int4 = geom::vector<int, 4>;
 
 
 void ZeroConstruction()
 {
-	PointF4::array control{};
-	PointF4 p{};
-	PointF4 p2 = {};
-	PointF4 p3 = PointF4();
-	assert(control == static_cast<const PointF4::array>(p));
-	assert(control == static_cast<const PointF4::array>(p2));
-	assert(control == static_cast<const PointF4::array>(p3));
-	assert(control == static_cast<const PointF4::array>(PointF4::zero()));
+	float4::array control{};
+	float4 p{};
+	float4 p2 = {};
+	float4 p3 = float4();
+	assert(control == static_cast<const float4::array>(p));
+	assert(control == static_cast<const float4::array>(p2));
+	assert(control == static_cast<const float4::array>(p3));
+	assert(control == static_cast<const float4::array>(float4::zero()));
 
 	// NOTE: can't really test for random garbage since random garbage can be anything, including all zeros
 	bool anyGarbage = false;
-	std::array<PointF4, 100> garbagePile;
+	std::array<float4, 100> garbagePile;
 	for (auto& garbage : garbagePile)
 	{
-		anyGarbage |= (control != static_cast<PointF4::array>(garbage));
+		anyGarbage |= (control != static_cast<float4::array>(garbage));
 		if(anyGarbage) break;
 	}
 	assert(anyGarbage);
@@ -32,24 +32,24 @@ void ZeroConstruction()
 
 void EqualityComparison()
 {
-	Point4 p(1, 2, 3, 4);
-	Point4 p2(1, 2, 3, 4);
-	Point4 p3(4, 3, 2, 1);
+	int4 p(1, 2, 3, 4);
+	int4 p2(1, 2, 3, 4);
+	int4 p3(4, 3, 2, 1);
 	assert(p == p2);
 	assert(p != p3);
 }
 
 void OtherConstruction()
 {
-	PointF4 p(1.0f, 2.0f, 3.0f, 4.0f);
-	PointF4 p2{1.0f, 2.0f, 3.0f, 4.0f};
-	PointF4 p3{{1.0f, 2.0f, 3.0f, 4.0f}};
-	PointF4 p4{PointF4::array{1.0f, 2.0f, 3.0f, 4.0f}};
-	PointF4 p5(PointF4::array{1.0f, 2.0f, 3.0f, 4.0f});
-	PointF4 p6 = PointF4(Point4(1, 2, 3, 4));
-	PointF4 p7 {{1, 2, 3, 4}};
-	PointF4 p8 (p7);
-	PointF4 p9 = {p8};
+	float4 p(1.0f, 2.0f, 3.0f, 4.0f);
+	float4 p2{1.0f, 2.0f, 3.0f, 4.0f};
+	float4 p3{{1.0f, 2.0f, 3.0f, 4.0f}};
+	float4 p4{float4::array{1.0f, 2.0f, 3.0f, 4.0f}};
+	float4 p5(float4::array{1.0f, 2.0f, 3.0f, 4.0f});
+	float4 p6 = float4(int4(1, 2, 3, 4));
+	float4 p7 {{1, 2, 3, 4}};
+	float4 p8 (p7);
+	float4 p9 = {p8};
 	assert(p == p2);
 	assert(p2 == p3);
 	assert(p3 == p4);
@@ -58,33 +58,33 @@ void OtherConstruction()
 	assert(p6 == p7);
 	assert(p7 == p8);
 	assert(p8 == p9);
-	assert(p9 != PointF4::zero());
-	static_assert(Point4(1,1,1,1) == Point4::one(), "");
-	static_assert(Point4(4,4,4,4) == Point4::one(4), "");
-	static_assert(PointF4(1.0f,1.0f,1.0f,1.0f) == PointF4::one(), "");
-	static_assert(Point4(1,0,0,0) == Point4::i(), "");
-	static_assert(Point4(0,1,0,0) == Point4::j(), "");
-	static_assert(Point4(0,0,1,0) == Point4::k(), "");
-	static_assert(Point4(0,0,0,1) == Point4::l(), "");
-	static_assert(Point4(4,0,0,0) == Point4::i(4), "");
-	static_assert(Point4(0,4,0,0) == Point4::j(4), "");
-	static_assert(Point4(0,0,4,0) == Point4::k(4), "");
-	static_assert(Point4(0,0,0,4) == Point4::l(4), "");
-	static_assert(Point4(-1,1,-1,-1) == Point4::unit<1>(1,-1), "");
+	assert(p9 != float4::zero());
+	static_assert(int4(1,1,1,1) == int4::one(), "");
+	static_assert(int4(4,4,4,4) == int4::one(4), "");
+	static_assert(float4(1.0f,1.0f,1.0f,1.0f) == float4::one(), "");
+	static_assert(int4(1,0,0,0) == int4::i(), "");
+	static_assert(int4(0,1,0,0) == int4::j(), "");
+	static_assert(int4(0,0,1,0) == int4::k(), "");
+	static_assert(int4(0,0,0,1) == int4::l(), "");
+	static_assert(int4(4,0,0,0) == int4::i(4), "");
+	static_assert(int4(0,4,0,0) == int4::j(4), "");
+	static_assert(int4(0,0,4,0) == int4::k(4), "");
+	static_assert(int4(0,0,0,4) == int4::l(4), "");
+	static_assert(int4(-1,1,-1,-1) == int4::unit<1>(1,-1), "");
 }
 
 void Mutation()
 {
-	PointF4 p {1.3f, 1.5f, 2.1f, 4.6f};
-	Point4 p2 {1, 2, 2, 5};
-	Point4 p3 {1, 1, 2, 4};
-	assert( p2 == p.mutantClone<Point4>( [](auto x) -> int { return std::round(x); } ));
-	assert( p3 == p.mutantClone<Point4>( [](auto x) -> int { return x; } ));
+	float4 p {1.3f, 1.5f, 2.1f, 4.6f};
+	int4 p2 {1, 2, 2, 5};
+	int4 p3 {1, 1, 2, 4};
+	assert( p2 == p.mutantClone<int4>( [](auto x) -> int { return std::round(x); } ));
+	assert( p3 == p.mutantClone<int4>( [](auto x) -> int { return x; } ));
 }
 
 void Mixing()
 {
-	Point4 p {1, 2, 3, 4};
+	int4 p {1, 2, 3, 4};
 	assert( (geom::vector<int, 2>{1,2} == p.mix<0,1>()) );
 	assert( (geom::vector<int, 2>{1,2} == p.mix<2>({0,1})) );
 	assert( (geom::vector<int, 3>{2,3,4} == p.mix<1,2,3>()) );
@@ -97,8 +97,8 @@ void Mixing()
 
 void RangeBasedLooping()
 {
-	const PointF4 p{1.0f, 2.0f, 3.0f, 4.0f};
-	PointF4 p2;
+	const float4 p{1.0f, 2.0f, 3.0f, 4.0f};
+	float4 p2;
 
 	int num = 1;
 	for(auto& coord : p2)
@@ -118,17 +118,17 @@ void RangeBasedLooping()
 
 void Arithmetic()
 {
-	PointF4 p{{1, 2, 3, 4}};
-	PointF4 p2 = p;
-	PointF4 sum{{2, 4, 6, 8}};
-	PointF4 inc{{2, 3, 4, 5}};
-	PointF4 dec{{0, 1, 2, 3}};
+	float4 p{{1, 2, 3, 4}};
+	float4 p2 = p;
+	float4 sum{{2, 4, 6, 8}};
+	float4 inc{{2, 3, 4, 5}};
+	float4 dec{{0, 1, 2, 3}};
 	assert(p + p2 == sum);
 	assert(p + 1 == inc);
 	assert(p - 1 == dec);
-	assert(p - dec == PointF4::one());
-	assert(p - p2 == PointF4::zero());
-	assert(-p == PointF4(Point4(-1, -2, -3, -4)));
+	assert(p - dec == float4::one());
+	assert(p - p2 == float4::zero());
+	assert(-p == float4(int4(-1, -2, -3, -4)));
 
 	assert(p2++ == p);
 	assert(p2 == p+1);
@@ -151,7 +151,7 @@ void Arithmetic()
 	p2 -= p;
 	assert(p2 == p);
 	p2 -= p;
-	assert(p2 == PointF4::zero());
+	assert(p2 == float4::zero());
 
 	p2 = p;
 	p2 += 3;
@@ -160,11 +160,11 @@ void Arithmetic()
 	assert(p2 == p + 1.5);
 
 	assert( p + p == p * 2);
-	assert( p * p == PointF4(1.0f, 4.0f, 9.0f, 16.0f));
+	assert( p * p == float4(1.0f, 4.0f, 9.0f, 16.0f));
 
 	assert( (p + p)/2 == p);
-	assert( p / (PointF4::one() * 2) == PointF4(0.5f, 1.0f, 1.5f, 2.0f) );
-	assert( p / p == PointF4::one());
+	assert( p / (float4::one() * 2) == float4(0.5f, 1.0f, 1.5f, 2.0f) );
+	assert( p / p == float4::one());
 
 	p2 = p;
 	p2 *= 2;
@@ -178,7 +178,7 @@ void Arithmetic()
 
 	p = {1.0f, 2.0f, 3.0f, 4.0f};
 	p2 = {1.0f, 0.0f, 1.0f, 0.0f};
-	PointF4 p3 = {1.0f, 2.0f, 0.0f, 1.0f};
+	float4 p3 = {1.0f, 2.0f, 0.0f, 1.0f};
 	assert(p%2 == p2);
 	p %= 3;
 	assert(p == p3);
@@ -188,9 +188,9 @@ void Arithmetic()
 void DiscreteArithmetic()
 {
 	// %
-	Point4 p(1, 2, 3, 4);
-	Point4 p2(1, 0, 1, 0);
-	Point4 p3(1, 2, 0, 1);
+	int4 p(1, 2, 3, 4);
+	int4 p2(1, 0, 1, 0);
+	int4 p3(1, 2, 0, 1);
 	assert(p%2 == p2);
 	p %= 3;
 	assert(p == p3);
@@ -273,23 +273,23 @@ void DiscreteArithmetic()
 	assert(p == p3);
 
 	// ~
-	p =                            {0b0101, 0b1010, 0b1111, 0b0000};
-	assert( (~p & 0b1111) == Point4(0b1010, 0b0101, 0b0000, 0b1111));
+	p =                          {0b0101, 0b1010, 0b1111, 0b0000};
+	assert( (~p & 0b1111) == int4(0b1010, 0b0101, 0b0000, 0b1111));
 }
 
 void Algorithms()
 {
 
-	Point4 p (1, 2, 3, 4);
-	Point4 p2 (4, 3, 2, 1);
-	assert( Point4(1, 2, 2, 1) == geom::min(p, p2) );
-	assert( Point4(4, 3, 3, 4) == geom::max(p, p2) );
+	int4 p (1, 2, 3, 4);
+	int4 p2 (4, 3, 2, 1);
+	assert( int4(1, 2, 2, 1) == geom::min(p, p2) );
+	assert( int4(4, 3, 3, 4) == geom::max(p, p2) );
 
 	p = -p;
-	assert( Point4(-1, 2, 2, -3) == geom::clamp(Point4(-10, 2, 3, -3), p, p2) );
-	assert( Point4(0, -2, -1, 1) == geom::clamp(Point4(0, -3, -1, 10), p, p2) );
-	assert( Point4(3, -1, -2, 0) == geom::clamp(Point4(3, -1, -2, 0), p, p2) );
-	assert( Point4(-1, 3, -3, 1) == geom::clamp(Point4(-3, 7, -5, 3), p, p2) );
+	assert( int4(-1, 2, 2, -3) == geom::clamp(int4(-10, 2, 3, -3), p, p2) );
+	assert( int4(0, -2, -1, 1) == geom::clamp(int4(0, -3, -1, 10), p, p2) );
+	assert( int4(3, -1, -2, 0) == geom::clamp(int4(3, -1, -2, 0), p, p2) );
+	assert( int4(-1, 3, -3, 1) == geom::clamp(int4(-3, 7, -5, 3), p, p2) );
 
 }
 
@@ -298,16 +298,16 @@ int PotentiallyAmbigous(geom::vector<int, 3>){ return 3; }
 void DisabiguateOnConstructorParameterCount()
 {
 	assert( PotentiallyAmbigous({1,2,3}) == 3 );
-	PotentiallyAmbigous({1,2});
+	assert( PotentiallyAmbigous({1,2}) == 2 );
 }
 
 void NumericLimits()
 {
-	using limits = std::numeric_limits<Point4>;
-	using coordLimits = std::numeric_limits<Point4::coordinate_type>;
+	using limits = std::numeric_limits<int4>;
+	using coordLimits = std::numeric_limits<int4::coordinate_type>;
 	static_assert(limits::is_specialized);
-	static_assert(limits::max() == Point4::one()*coordLimits::max());
-	static_assert(limits::min() == Point4::one()*coordLimits::min());
+	static_assert(limits::max() == int4::one()*coordLimits::max());
+	static_assert(limits::min() == int4::one()*coordLimits::min());
 }
 
 void CoordinateOrder()
@@ -329,15 +329,15 @@ void CoordinateOrder()
 	assert( p_wzyx[1] == 2 );
 	assert( p_wzyx[2] == 3 );
 	assert( p_wzyx[3] == 4 );
-	assert( Point4(p_wzyx) == Point4(4,3,2,1) );
+	assert( int4(p_wzyx) == int4(4,3,2,1) );
 }
 
 constexpr void Constexprness() // TODO: needs better coverage
 {
-	constexpr Point4 p = Point4(1,2,3,4);
+	constexpr int4 p = int4(1,2,3,4);
 	constexpr std::array<int, p[2]> arr = {1,2,3};
-	constexpr std::array<int, Point4::zero()[0]> arr2 = {};
-	constexpr std::array<int, Point4::one()[1]> arr3 = {13};
+	constexpr std::array<int, int4::zero()[0]> arr2 = {};
+	constexpr std::array<int, int4::one()[1]> arr3 = {13};
 	static_assert(arr[p[1]] == 3, "Some other test should have caught this error.");
 	static_assert(arr2.size() == 0, "Some other test should have caught this error.");
 	static_assert(arr3[0] == 13, "Some other test should have caught this error.");
