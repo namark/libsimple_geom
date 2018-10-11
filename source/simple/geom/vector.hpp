@@ -338,6 +338,30 @@ namespace simple::geom
 			return *this;
 		}
 
+		constexpr vector& floor()
+		{
+			using std::floor;
+			for(auto&& coord : raw)
+				coord = floor(coord);
+			return *this;
+		}
+
+		constexpr vector& ceil()
+		{
+			using std::ceil;
+			for(auto&& coord : raw)
+				coord = ceil(coord);
+			return *this;
+		}
+
+		constexpr vector& round()
+		{
+			using std::round;
+			for(auto&& coord : raw)
+				coord = round(coord);
+			return *this;
+		}
+
 		constexpr vector & operator++()
 		{
 			for(auto& coord : raw) ++coord;
@@ -472,6 +496,30 @@ namespace simple::geom
 	vector<C,D,O> clamp(vector<C,D,O> v, const vector<C,D,O> & lo, const vector<C,D,O> & hi)
 	{
 		v.clamp(lo, hi);
+		return v;
+	}
+
+	template <typename C, size_t D, typename O>
+	constexpr
+	vector<C,D,O> floor(vector<C,D,O> v)
+	{
+		v.floor();
+		return v;
+	}
+
+	template <typename C, size_t D, typename O>
+	constexpr
+	vector<C,D,O> ceil(vector<C,D,O> v)
+	{
+		v.ceil();
+		return v;
+	}
+
+	template <typename C, size_t D, typename O>
+	constexpr
+	vector<C,D,O> round(vector<C,D,O> v)
+	{
+		v.round();
 		return v;
 	}
 

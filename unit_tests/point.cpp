@@ -291,6 +291,11 @@ void Algorithms()
 	assert( int4(3, -1, -2, 0) == geom::clamp(int4(3, -1, -2, 0), p, p2) );
 	assert( int4(-1, 3, -3, 1) == geom::clamp(int4(-3, 7, -5, 3), p, p2) );
 
+	float4 fp (1.1f, 3.4f, 4.5f, 8.9f);
+	assert( float4(1.f, 3.f, 4.f, 8.f) == floor(fp) );
+	assert( float4(2.f, 4.f, 5.f, 9.f) == ceil(fp) );
+	assert( float4(1.f, 3.f, 5.f, 9.f) == round(fp) );
+
 }
 
 int PotentiallyAmbigous(geom::vector<int, 2>){ return 2; }
