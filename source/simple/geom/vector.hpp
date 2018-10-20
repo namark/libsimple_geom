@@ -397,12 +397,14 @@ namespace simple::geom
 		template <typename T>
 		constexpr static bool can_apply = can_apply_s<T>::value;
 
-		// square matrix multiplication and matrix-vector multiplication/dot product fusion mutant operator
-		template<typename AnotherComponent, typename Return = std::conditional_t<can_apply<AnotherComponent>, vector, Coordinate>>
-		constexpr Return operator()(const vector<AnotherComponent, Dimensions> & another) const
+		// matrix multiplication and matrix-vector multiplication/dot product fusion mutant operator
+		template<typename AnotherComponent, size_t AnotherDimesnions, typename AnotherOrder,
+			std::enable_if_t<std::is_same_v<Order,AnotherOrder> || can_apply<AnotherComponent>>* = nullptr,
+			typename Return = std::conditional_t<can_apply<AnotherComponent>, vector<Coordinate, AnotherDimesnions, AnotherOrder>, Coordinate>>
+		constexpr Return operator()(const vector<AnotherComponent, AnotherDimesnions, AnotherOrder> & another) const
 		{
 			Return ret{};
-			for(size_t i = 0; i < Dimensions; ++i)
+			for(size_t i = 0; i < AnotherDimesnions; ++i)
 				if constexpr (can_apply<AnotherComponent>)
 					ret[i] = (*this)(another[i]);
 				else

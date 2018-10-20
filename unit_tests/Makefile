@@ -14,7 +14,7 @@ run: $(RUNS)
 
 build: $(TARGETS)
 
-$(TEMPDIR)/vector.run: matrix.data matrix_vector.data dot_product.data
+$(TEMPDIR)/vector.run: matrix.data square_matrix.data matrix_vector.data dot_product.data
 
 $(TEMPDIR)/%.run: %.test
 	./$<

@@ -21,7 +21,7 @@ std::istream& operator>>(std::istream& is, Vector& v)
 void SquareMatrixMultiplication()
 {
 	std::vector<int3x3> matrices;
-	std::ifstream test_data("matrix.data");
+	std::ifstream test_data("square_matrix.data");
 	while(test_data)
 	{
 		int3x3 matrix;
@@ -61,8 +61,8 @@ void MatrixVectorMultiplication()
 	assert(tests.size() > 2);
 	tests.pop_back();
 
-	for(auto&& test : tests)
-		assert( test.out == test.matrix(test.in) );
+	for(auto&& [matrix, in, out] : tests)
+		assert( out == matrix(in) );
 }
 
 void DotProduct()
@@ -85,11 +85,63 @@ void DotProduct()
 	assert(tests.size() > 2);
 	tests.pop_back();
 
-	for(auto&& test : tests)
+	for(auto&& [in1, in2, out] : tests)
 	{
-		assert( test.out == test.in1(test.in2) );
-		assert( test.out == test.in2(test.in1) );
+		assert( out == in1(in2) );
+		assert( out == in2(in1) );
 	}
+}
+
+void NonSquareMatrixMultiplication()
+{
+	using int2x3 = vector<int2, 3>;
+	using int3x2 = vector<int3, 2>;
+	using int3x5 = vector<int3, 5>;
+	using int2x5 = vector<int2, 5>;
+
+	int2x3 a{ int2x3::array {{
+		{1, 2},
+		{2, 1},
+		{1, 2},
+	}}};
+	int3x5 b{ int3x5::array {{
+		{1, 2, 3},
+		{3, 1, 2},
+		{2, 3, 1},
+		{3, 2, 1},
+		{1, 3, 2}
+	}}};
+	int2x5 ans{ int2x5::array {{
+		{8, 10},
+		{7, 11},
+		{9, 9},
+		{8, 10},
+		{9, 9}
+	}}};
+	assert ( ans == a(b) );
+
+	struct test_case
+	{
+		int3x2 in1;
+		int2x3 in2;
+		int2x2 out;
+	};
+	std::vector<test_case> tests;
+	std::ifstream test_data("matrix.data");
+	while(test_data)
+	{
+		test_case test;
+		test_data >> test.in1;
+		test_data >> test.in2;
+		test_data >> test.out;
+		tests.push_back(test);
+	}
+	assert(tests.size() > 2);
+	tests.pop_back();
+
+	for(auto&& [in1, in2, out] : tests)
+		assert( out == in2(in1) );
+
 }
 
 constexpr bool Constexprness()
@@ -102,10 +154,10 @@ constexpr bool Constexprness()
 
 int main()
 {
-
 	SquareMatrixMultiplication();
 	MatrixVectorMultiplication();
 	DotProduct();
+	NonSquareMatrixMultiplication();
 	static_assert(Constexprness());
 	return 0;
 }
