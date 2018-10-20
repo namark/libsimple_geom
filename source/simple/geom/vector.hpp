@@ -16,8 +16,8 @@ namespace simple::geom
 {
 
 	template <typename Coordinate = float, size_t Dimensions = 2,
-			 typename Order = std::make_index_sequence<Dimensions>,
-			 std::enable_if_t<Order::size() == Dimensions>* = nullptr>
+			typename Order = std::make_index_sequence<Dimensions>,
+			std::enable_if_t<Order::size() == Dimensions>* = nullptr>
 	class vector
 	{
 		public:
@@ -146,8 +146,8 @@ namespace simple::geom
 		vector() = default;
 
 		template <typename... Coordinates,
-				 typename std::enable_if_t<sizeof...(Coordinates) == Dimensions> * = nullptr,
-				 typename support::enable_if_all<std::is_convertible<Coordinates, Coordinate>::value...> * = nullptr>
+				typename std::enable_if_t<sizeof...(Coordinates) == Dimensions> * = nullptr,
+				typename support::enable_if_all<std::is_convertible<Coordinates, Coordinate>::value...> * = nullptr>
 		constexpr vector(Coordinates&&... coordinates)
 			: raw {std::forward<Coordinates>(coordinates)...}
 		{}
@@ -160,7 +160,7 @@ namespace simple::geom
 		}
 
 		template <typename Another, is_convertible_to_me<Another>* = nullptr,
-	 	std::enable_if_t<!std::is_same_v<typename Another::order, Order>> *...>
+		std::enable_if_t<!std::is_same_v<typename Another::order, Order>> *...>
 		constexpr explicit vector(const Another& another) : raw{}
 		{
 			set_in_order<Another>(another);
