@@ -28,21 +28,13 @@ namespace simple::geom
 
 		constexpr anchored_segment() = default;
 
-		constexpr anchored_segment
-		(
-			Type size,
-			Type position = Type{},
-			AnchorType anchor = AnchorType{}
-		)
-		: base{size, position}, anchor{anchor} // should move?
-		{}
-
 		constexpr operator typename base::range()
 		{
 			auto lower = this->position -
 				static_cast<Type>(anchor * static_cast<AnchorType>(this->size));
 			return typename base::range{lower, lower + this->size};
 		}
+
 	};
 
 	template <typename Coordinate, size_t Dimensions = 2>
