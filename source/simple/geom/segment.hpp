@@ -14,7 +14,7 @@ namespace simple::geom
 
 		using range = support::range<Type>;
 
-		constexpr operator range()
+		constexpr operator range() const
 		{
 			return range{position, position + size};
 		}
@@ -28,7 +28,7 @@ namespace simple::geom
 
 		constexpr anchored_segment() = default;
 
-		constexpr operator typename base::range()
+		constexpr operator typename base::range() const
 		{
 			auto lower = this->position -
 				static_cast<Type>(anchor * static_cast<AnchorType>(this->size));
