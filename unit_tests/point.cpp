@@ -296,6 +296,10 @@ void Algorithms()
 	assert( float4(2.f, 4.f, 5.f, 9.f) == ceil(fp) );
 	assert( float4(1.f, 3.f, 5.f, 9.f) == round(fp) );
 
+	int4 p3 (2, 6, 3, 0);
+	assert( p3.magnitude() ==  49);
+	assert( p3.length() == 7 );
+
 }
 
 int PotentiallyAmbigous(geom::vector<int, 2>){ return 2; }

@@ -362,6 +362,20 @@ namespace simple::geom
 			return *this;
 		}
 
+		constexpr Coordinate magnitude() const
+		{
+			Coordinate result = Coordinate{};
+			for(auto&& coord : raw)
+				result += coord * coord;
+			return result;
+		}
+
+		constexpr Coordinate length() const
+		{
+			using std::sqrt;
+			return sqrt(magnitude());
+		}
+
 		constexpr vector & operator++()
 		{
 			for(auto& coord : raw) ++coord;
