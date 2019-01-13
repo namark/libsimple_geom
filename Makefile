@@ -25,7 +25,7 @@ uninstall:
 	@rmdir -p $(INCDIRS) 2> /dev/null || true
 	@echo Uninstall complete!
 
-TESTMAKE = @$(MAKE) --no-print-directory -C unit_tests/
+TESTMAKE = +$(MAKE) --no-print-directory -C unit_tests/
 
 test:
 	@$(TESTMAKE)
