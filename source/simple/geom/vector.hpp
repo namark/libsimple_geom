@@ -179,12 +179,26 @@ namespace simple::geom
 			return raw;
 		}
 
+		template<size_t D = Dimensions, std::enable_if_t<D == 1>* = nullptr>
+		operator const Coordinate & () const noexcept
+		{
+			return raw[0];
+		}
+
 		template <typename Another>
-		Another mutantClone(typename Another::coordinate_type(*method)(const vector::coordinate_type&)) const&
+		constexpr Another mutantClone(typename Another::coordinate_type(*method)(const vector::coordinate_type&)) const&
 		{
 			static_assert(Another::dimensions == Dimensions, " Dimension mismatch. ");
-			Another another;
+			Another another{};
 			std::transform(begin(), end(), another.begin(), method);
+			return another;
+		}
+
+		template <typename Function, typename AnotherCoord = std::invoke_result_t<Function, Coordinate>>
+		constexpr vector<AnotherCoord, Dimensions> mutant_clone(const Function& transform) const&
+		{
+			vector<AnotherCoord, Dimensions> another{};
+			std::transform(begin(), end(), another.begin(), transform);
 			return another;
 		}
 
@@ -370,6 +384,11 @@ namespace simple::geom
 			return result;
 		}
 
+		constexpr Coordinate quadrance() const
+		{
+			return magnitude();
+		}
+
 		constexpr Coordinate length() const
 		{
 			using std::sqrt;
@@ -548,6 +567,8 @@ namespace simple::geom
 	using ::operator&;
 	using ::operator|;
 	using ::operator^;
+	using ::operator<<;
+	using ::operator>>;
 	using ::operator+=;
 	using ::operator-=;
 	using ::operator*=;
@@ -556,6 +577,8 @@ namespace simple::geom
 	using ::operator&=;
 	using ::operator|=;
 	using ::operator^=;
+	using ::operator<<=;
+	using ::operator>>=;
 
 	template<typename Coordinate, size_t Dimensions, typename Order>
 	std::ostream & operator<<(std::ostream & out, const vector<Coordinate, Dimensions, Order> & vector)
@@ -579,7 +602,7 @@ namespace simple::geom
 		out << "\n";
 
 		for(size_t i = 0; i < M; ++i)
-			out << vector[i] << " \n";
+			out << vector[i] << "\n";
 
 		for(size_t i = 0; i < N; ++i)
 			out << "---";
@@ -587,6 +610,13 @@ namespace simple::geom
 
 		return out;
 	}
+
+	template <typename F, typename... R> vector(F firts, R... rest)
+		-> vector<F, sizeof...(R) + 1>;
+
+	// ugh, clang is really nitpickey about default template arguments
+	template <typename C, size_t D, typename O, void* SFINAE> vector(vector<C,D,O,SFINAE>)
+		-> vector<vector<C,D,O,SFINAE>,1>;
 
 } // namespace simple::geom
 

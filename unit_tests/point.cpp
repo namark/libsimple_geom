@@ -80,6 +80,8 @@ void Mutation()
 	int4 p3 {1, 1, 2, 4};
 	assert( p2 == p.mutantClone<int4>( [](auto x) -> int { return std::round(x); } ));
 	assert( p3 == p.mutantClone<int4>( [](auto x) -> int { return x; } ));
+	assert( p2 == p.mutant_clone( [](auto x) -> int { return std::round(x); } ));
+	assert( p3 == p.mutant_clone( [](auto x) -> int { return x; } ));
 }
 
 void Mixing()
@@ -125,6 +127,7 @@ void Arithmetic()
 	float4 dec{{0, 1, 2, 3}};
 	assert(p + p2 == sum);
 	assert(p + 1 == inc);
+	assert(1 + p == inc);
 	assert(p - 1 == dec);
 	assert(p - dec == float4::one());
 	assert(p - p2 == float4::zero());
@@ -157,7 +160,7 @@ void Arithmetic()
 	p2 += 3;
 	assert(p2 == p + 3);
 	p2 -= 1.5f;
-	assert(p2 == p + 1.5);
+	assert(p2 == p + 1.5f);
 
 	assert( p + p == p * 2);
 	assert( p * p == float4(1.0f, 4.0f, 9.0f, 16.0f));
@@ -179,8 +182,8 @@ void Arithmetic()
 	p = {1.0f, 2.0f, 3.0f, 4.0f};
 	p2 = {1.0f, 0.0f, 1.0f, 0.0f};
 	float4 p3 = {1.0f, 2.0f, 0.0f, 1.0f};
-	assert(p%2 == p2);
-	p %= 3;
+	assert(p%2.f == p2);
+	p %= 3.f;
 	assert(p == p3);
 
 }
