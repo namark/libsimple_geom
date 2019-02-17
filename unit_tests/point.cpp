@@ -179,12 +179,19 @@ void Arithmetic()
 	p2 /= 2;
 	assert(p2 == p);
 
-	p = {1.0f, 2.0f, 3.0f, 4.0f};
-	p2 = {1.0f, 0.0f, 1.0f, 0.0f};
-	float4 p3 = {1.0f, 2.0f, 0.0f, 1.0f};
+	p = {1.f, 2.f, 3.f, 4.f};
+	p2 = {1.f, 0.f, 1.f, 0.f};
+	float4 p3 = {1.f, 2.f, 0.f, 1.f};
 	assert(p%2.f == p2);
 	p %= 3.f;
 	assert(p == p3);
+
+	p = {1.f, 2.f, 3.f, 4.f};
+	p3 = {4.f, 5.f, 7.f, 9.f};
+	p2 = {3.f, 3.f, 4.f, 5.f};
+	assert(p3 % p2 == p);
+	p3 %= p2;
+	assert(p3 == p);
 
 }
 
