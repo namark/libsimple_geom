@@ -143,7 +143,7 @@ namespace simple::geom
 
 		public:
 
-		vector() = default;
+		constexpr vector() = default;
 
 		template <typename... Coordinates,
 				typename std::enable_if_t<sizeof...(Coordinates) == Dimensions> * = nullptr,
@@ -376,6 +376,14 @@ namespace simple::geom
 			return *this;
 		}
 
+		constexpr vector& abs()
+		{
+			using std::abs;
+			for(auto&& coord : raw)
+				coord = abs(coord);
+			return *this;
+		}
+
 		constexpr Coordinate magnitude() const
 		{
 			Coordinate result = Coordinate{};
@@ -555,6 +563,14 @@ namespace simple::geom
 	vector<C,D,O> round(vector<C,D,O> v)
 	{
 		v.round();
+		return v;
+	}
+
+	template <typename C, size_t D, typename O>
+	constexpr
+	vector<C,D,O> abs(vector<C,D,O> v)
+	{
+		v.abs();
 		return v;
 	}
 
