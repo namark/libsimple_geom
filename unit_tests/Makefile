@@ -9,6 +9,7 @@ TEMPDIR	:= temp
 OBJECTS	:= $(SOURCES:%.cpp=$(TEMPDIR)/%.o)
 DEPENDS	:= $(OBJECTS:.o=.d)
 RUNS	:= $(OBJECTS:.o=.run)
+OCTAVE	:= octave
 
 run: $(RUNS)
 
@@ -26,8 +27,10 @@ $(TEMPDIR)/%.run: %.test
 $(TEMPDIR)/%.o: %.cpp | $(TEMPDIR)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c $<
 
+ifeq (, $(shell which $(OCTAVE)))
 %.data: %.octave
-	octave -q $< | sed 's/[ABans=]//g' > $@
+	$(OCTAVE) -q $< | sed 's/[ABans=]//g' > $@
+endif
 
 $(TEMPDIR):
 	@mkdir $@
