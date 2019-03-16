@@ -1,0 +1,164 @@
+// generated with
+// https://notabug.org/namark/sketchbook/src/master/range_intersection.cpp
+{
+	auto a = range{vector(175, 175), vector(275, 275)};
+	auto b = range{vector(125, 125), vector(225, 225)};
+	auto i = range{vector(175, 175), vector(225, 225)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == true);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(175, 175), vector(275, 275)};
+	auto b = range{vector(237, 121), vector(337, 221)};
+	auto i = range{vector(237, 175), vector(275, 221)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == true);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(175, 175), vector(275, 275)};
+	auto b = range{vector(233, 235), vector(333, 335)};
+	auto i = range{vector(233, 235), vector(275, 275)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == true);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(175, 175), vector(275, 275)};
+	auto b = range{vector(125, 229), vector(225, 329)};
+	auto i = range{vector(175, 229), vector(225, 275)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == true);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(138, 143), vector(238, 243)};
+	auto b = range{vector(277, 151), vector(377, 251)};
+	auto i = range{vector(277, 151), vector(238, 243)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == false);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(138, 143), vector(238, 243)};
+	auto b = range{vector(260, 23), vector(360, 123)};
+	auto i = range{vector(260, 143), vector(238, 123)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == false);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(138, 143), vector(238, 243)};
+	auto b = range{vector(134, 9), vector(234, 109)};
+	auto i = range{vector(138, 143), vector(234, 109)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == false);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(138, 143), vector(238, 243)};
+	auto b = range{vector(20, 17), vector(120, 117)};
+	auto i = range{vector(138, 143), vector(120, 117)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == false);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(138, 143), vector(238, 243)};
+	auto b = range{vector(9, 149), vector(109, 249)};
+	auto i = range{vector(138, 149), vector(109, 243)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == false);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(138, 143), vector(238, 243)};
+	auto b = range{vector(126, 287), vector(226, 387)};
+	auto i = range{vector(138, 287), vector(226, 243)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == false);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(138, 143), vector(238, 243)};
+	auto b = range{vector(184, 183), vector(224, 388)};
+	auto i = range{vector(184, 183), vector(224, 243)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == true);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(138, 143), vector(238, 243)};
+	auto b = range{vector(180, 266), vector(220, 471)};
+	auto i = range{vector(180, 266), vector(220, 243)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == false);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(138, 143), vector(238, 243)};
+	auto b = range{vector(230, 51), vector(270, 256)};
+	auto i = range{vector(230, 143), vector(238, 243)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == true);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(138, 143), vector(238, 243)};
+	auto b = range{vector(119, 62), vector(159, 267)};
+	auto i = range{vector(138, 143), vector(159, 243)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == true);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(130, 155), vector(152, 189)};
+	auto b = range{vector(119, 62), vector(159, 267)};
+	auto i = range{vector(130, 155), vector(152, 189)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == true);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(130, 155), vector(152, 189)};
+	auto b = range{vector(180, 84), vector(220, 289)};
+	auto i = range{vector(180, 155), vector(152, 189)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == false);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(130, 155), vector(326, 194)};
+	auto b = range{vector(180, 84), vector(220, 289)};
+	auto i = range{vector(180, 155), vector(220, 194)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == true);
+	assert(i.valid() == intersects(a,b));
+}
+
+{
+	auto a = range{vector(196, 271), vector(392, 310)};
+	auto b = range{vector(180, 84), vector(220, 289)};
+	auto i = range{vector(196, 271), vector(220, 289)};
+	assert(intersection(a,b) == i);
+	assert(i.valid() == true);
+	assert(i.valid() == intersects(a,b));
+}
+
