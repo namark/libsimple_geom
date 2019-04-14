@@ -27,7 +27,7 @@ $(TEMPDIR)/%.run: %.test
 $(TEMPDIR)/%.o: %.cpp | $(TEMPDIR)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c $<
 
-ifeq (, $(shell which $(OCTAVE)))
+ifneq ($(shell which $(OCTAVE)),)
 %.data: %.octave
 	$(OCTAVE) -q $< | sed 's/[ABans=]//g' > $@
 endif
@@ -41,7 +41,7 @@ cleanrun:
 clean: cleanrun
 	@rm $(DEPENDS) 2> /dev/null || true
 	@rm $(OBJECTS) 2> /dev/null || true
-	@rmdir $(TEMPDIR) 2> /dev/null || true
+	@rmdir -p $(TEMPDIR) 2> /dev/null || true
 	@rm $(TARGETS) 2> /dev/null || true
 	@echo All clean!
 
