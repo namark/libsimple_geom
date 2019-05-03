@@ -288,6 +288,18 @@ void DiscreteArithmetic()
 	assert( (~p & 0b1111) == int4(0b1010, 0b0101, 0b0000, 0b1111));
 }
 
+void ComparisonOperators()
+{
+	int4 p(1, 2, 3, 4);
+	int4 p2(1, -2, 0, 1);
+
+	// some random masking logic
+	assert(p * int4(p2 > int4::zero()) == int4(1, 0, 0, 4));
+	assert(p * int4(p2 < int4::zero()) == int4(0, 2, 0, 0));
+	assert(p * int4(p2 == int4::zero()) == int4(0, 0, 3, 0));
+	assert(p * int4(p2 == int4::zero() | p2 == int4::one()) == int4(1, 0, 3, 4));
+}
+
 void Algorithms()
 {
 
@@ -375,6 +387,7 @@ int main()
 	RangeBasedLooping();
 	Arithmetic();
 	DiscreteArithmetic();
+	ComparisonOperators();
 	Algorithms();
 	DisabiguateOnConstructorParameterCount();
 	NumericLimits();

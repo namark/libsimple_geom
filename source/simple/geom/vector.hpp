@@ -246,47 +246,40 @@ namespace simple::geom
 			return result;
 		}
 
-		constexpr bool operator==(const vector & another) const
+		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>
+		constexpr operator bool() const noexcept
 		{
-			return raw == another.raw;
+			for(auto&& c : raw)
+				if(!c) return false;
+			return true;
 		}
 
-		constexpr bool operator!=(const vector & another) const
-		{
-			return raw != another.raw;
+		using bool_vector = vector<bool, Dimensions, Order>;
+#define SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(op) \
+		constexpr bool_vector operator op(const vector & another) const \
+		{ \
+			bool_vector ret{}; \
+			for(size_t i = 0; i < Dimensions; ++i) \
+				ret[i] = (raw[i] op another.raw[i]); \
+			return ret; \
 		}
 
-		constexpr bool operator > (const vector & another) const
-		{
-			bool ret = true;
-			for(size_t i = 0; i < Dimensions; ++i)
-				ret = ret && (raw[i] > another.raw[i]);
-			return ret;
-		}
+SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(==)
+SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(!=)
+SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(>)
+SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(>=)
+SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<)
+SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=)
+#undef SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR
 
-		constexpr bool operator >= (const vector & another) const
-		{
-			bool ret = true;
-			for(size_t i = 0; i < Dimensions; ++i)
-				ret = ret && (raw[i] >= another.raw[i]);
-			return ret;
-		}
-
-		constexpr bool operator < (const vector & another) const
-		{
-			bool ret = true;
-			for(size_t i = 0; i < Dimensions; ++i)
-				ret = ret && (raw[i] < another.raw[i]);
-			return ret;
-		}
-
-		constexpr bool operator <= (const vector & another) const
-		{
-			bool ret = true;
-			for(size_t i = 0; i < Dimensions; ++i)
-				ret = ret && (raw[i] <= another.raw[i]);
-			return ret;
-		}
+		// template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>
+		// friend
+		// constexpr vector operator !(vector one) noexcept
+		// {
+		// 	for(size_t i = 0; i < Dimensions; ++i)
+		// 		one[i] = !one[i];
+		// 	return one;
+		// }
 
 		template <size_t dimension>
 		constexpr const coordinate_type & get() const&
