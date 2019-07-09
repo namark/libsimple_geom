@@ -3,8 +3,9 @@
 #include <cassert>
 
 using namespace simple;
-using float4 = geom::vector<float, 4>;
-using int4 = geom::vector<int, 4>;
+using geom::vector;
+using float4 = vector<float, 4>;
+using int4 = vector<int, 4>;
 
 
 void ZeroConstruction()
@@ -286,6 +287,11 @@ void DiscreteArithmetic()
 	// ~
 	p =                          {0b0101, 0b1010, 0b1111, 0b0000};
 	assert( (~p & 0b1111) == int4(0b1010, 0b0101, 0b0000, 0b1111));
+
+	// ~ for vector<bool>
+	assert( ~vector(true, false, true, false) == vector(false, true, false, true) );
+	assert( ~vector(true, true, false, false) == vector(false, false, true, true) );
+	assert( ~vector(true, true, true, true) == vector(false, false, false, false) );
 }
 
 void ComparisonOperators()
@@ -308,21 +314,59 @@ void Algorithms()
 	assert( int4(1, 2, 2, 1) == geom::min(p, p2) );
 	assert( int4(4, 3, 3, 4) == geom::max(p, p2) );
 
+	int4 p3;
+	(p3 = p).min(p2);
+	assert( int4(1, 2, 2, 1) == p3 );
+	(p3 = p).max(p2);
+	assert( int4(4, 3, 3, 4) == p3 );
+
 	p = -p;
 	assert( int4(-1, 2, 2, -3) == geom::clamp(int4(-10, 2, 3, -3), p, p2) );
 	assert( int4(0, -2, -1, 1) == geom::clamp(int4(0, -3, -1, 10), p, p2) );
 	assert( int4(3, -1, -2, 0) == geom::clamp(int4(3, -1, -2, 0), p, p2) );
 	assert( int4(-1, 3, -3, 1) == geom::clamp(int4(-3, 7, -5, 3), p, p2) );
 
+	(p3 = int4(-10, 2, 3, -3)).clamp(p,p2);
+	assert( int4(-1, 2, 2, -3) == p3 );
+	(p3 = int4(0, -3, -1, 10)).clamp(p,p2);
+	assert( int4(0, -2, -1, 1) == p3);
+	(p3 = int4(3, -1, -2, 0)).clamp(p,p2);
+	assert( int4(3, -1, -2, 0) == p3);
+	(p3 = int4(-3, 7, -5, 3)).clamp(p,p2);
+	assert( int4(-1, 3, -3, 1) == p3);
+
 	float4 fp (1.1f, 3.4f, 4.5f, 8.9f);
 	assert( float4(1.f, 3.f, 4.f, 8.f) == floor(fp) );
 	assert( float4(2.f, 4.f, 5.f, 9.f) == ceil(fp) );
 	assert( float4(1.f, 3.f, 5.f, 9.f) == round(fp) );
 
-	int4 p3 (2, 6, 3, 0);
-	assert( p3.magnitude() ==  49);
-	assert( p3.length() == 7 );
+	float4 fp2;
+	(fp2 = fp).floor();
+	assert( float4(1.f, 3.f, 4.f, 8.f) == fp2 );
+	(fp2 = fp).ceil();
+	assert( float4(2.f, 4.f, 5.f, 9.f) == fp2 );
+	(fp2 = fp).round();
+	assert( float4(1.f, 3.f, 5.f, 9.f) == fp2 );
 
+	int4 p4 (2, 6, 3, 0);
+	assert( p4.magnitude() ==  49);
+	assert( p4.quadrance() ==  49);
+	assert( p4.length() == 7 );
+	assert( magnitude(p4) ==  49);
+	assert( quadrance(p4) ==  49);
+	assert( length(p4) == 7 );
+
+
+	assert( signum(int4(-12, 34, 0, 1)) == int4(-1, 1, 0, 1) );
+	assert( signum(int4(9, -13, -77, 0)) == int4(1, -1, -1, 0) );
+	assert( signum(float4(-.3f, .12f, .0f, +.0f)) == float4(-1.f, 1.f, 0.f, 0.f) );
+
+	(p3 = int4(-12, 34, 0, 1)).signum();
+	assert( int4(-1, 1, 0, 1) == p3 );
+	(p3 = int4(9, -13, -77, 0)).signum();
+	assert( int4(1, -1, -1, 0) == p3 );
+	(fp2 = float4(-.3f, .12f, .0f, +.0f)).signum();
+	assert( float4(-1.f, 1.f, 0.f, 0.f) == fp2 );
 }
 
 int PotentiallyAmbigous(geom::vector<int, 2>){ return 2; }

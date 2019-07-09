@@ -272,14 +272,14 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<)
 SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=)
 #undef SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR
 
-		// template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>
-		// friend
-		// constexpr vector operator !(vector one) noexcept
-		// {
-		// 	for(size_t i = 0; i < Dimensions; ++i)
-		// 		one[i] = !one[i];
-		// 	return one;
-		// }
+		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>
+		friend
+		constexpr vector operator ~(vector one) noexcept
+		{
+			for(size_t i = 0; i < Dimensions; ++i)
+				one[i] = !one[i];
+			return one;
+		}
 
 		template <size_t dimension>
 		constexpr const coordinate_type & get() const&
@@ -376,6 +376,14 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=)
 				coord = abs(coord);
 			return *this;
 		}
+
+		constexpr vector& signum()
+		{
+			using std::abs;
+			for(auto&& coord : raw)
+				coord = !(coord != Coordinate{}) ? Coordinate{} : coord/abs(coord);
+			return *this;
+		};
 
 		constexpr Coordinate magnitude() const
 		{
@@ -564,6 +572,35 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=)
 	vector<C,D,O> abs(vector<C,D,O> v)
 	{
 		v.abs();
+		return v;
+	}
+
+	template <typename C, size_t D, typename O>
+	constexpr
+	C magnitude(const vector<C,D,O>& v)
+	{
+		return v.magnitude();
+	}
+
+	template <typename C, size_t D, typename O>
+	constexpr
+	C quadrance(const vector<C,D,O>& v)
+	{
+		return v.quadrance();
+	}
+
+	template <typename C, size_t D, typename O>
+	constexpr
+	C length(const vector<C,D,O>& v)
+	{
+		return v.length();
+	}
+
+	template <typename C, size_t D, typename O>
+	constexpr
+	auto signum(vector<C,D,O> v)
+	{
+		v.signum();
 		return v;
 	}
 
