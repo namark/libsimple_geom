@@ -1,3 +1,4 @@
+// TODO: this file is getting huge, need to break it up somehow
 #ifndef SIMPLE_GEOM_VECTOR_HPP
 #define SIMPLE_GEOM_VECTOR_HPP
 
@@ -14,6 +15,17 @@
 
 namespace simple::geom
 {
+
+	namespace detail
+	{
+		class disjunctive_bool {
+			bool value = false;
+			public:
+			constexpr disjunctive_bool() noexcept = default;
+			constexpr disjunctive_bool(const bool& value) noexcept : value(value) {};
+			constexpr operator bool() const noexcept{ return value; }
+		};
+	} // namespace detail
 
 	template <typename Coordinate = float, size_t Dimensions = 2,
 			typename Order = std::make_index_sequence<Dimensions>,
@@ -254,22 +266,47 @@ namespace simple::geom
 			return true;
 		}
 
+		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,detail::disjunctive_bool>>* = nullptr>
+		constexpr operator bool() const noexcept
+		{
+			for(auto&& c : raw)
+				if(c) return true;
+			return false;
+		}
+
 		using bool_vector = vector<bool, Dimensions, Order>;
-#define SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(op) \
-		constexpr bool_vector operator op(const vector & another) const \
+		using disjunctive_bool_vector = vector<detail::disjunctive_bool, Dimensions, Order>;
+
+		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>
+		constexpr vector(const disjunctive_bool_vector& another) noexcept
+		{
+			for(size_t i = 0; i < Dimensions; ++i)
+				raw[i] = another[i];
+		}
+		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,detail::disjunctive_bool>>* = nullptr>
+		constexpr vector(const bool_vector& another) noexcept
+		{
+			for(size_t i = 0; i < Dimensions; ++i)
+				raw[i] = another[i];
+		}
+
+
+#define SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(op, return_type) \
+		constexpr return_type operator op(const vector & another) const \
 		{ \
-			bool_vector ret{}; \
+			return_type ret{}; \
 			for(size_t i = 0; i < Dimensions; ++i) \
 				ret[i] = (raw[i] op another.raw[i]); \
 			return ret; \
 		}
 
-SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(==)
-SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(!=)
-SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(>)
-SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(>=)
-SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<)
-SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=)
+// NOTE: some day, in some very cool piece of super generic code, i'm going to regret making != inconsistent with the rest aren't i?... and the super decaying secret disjunctive vector is going to give me problems in some perfectly normal code too, isn't it? well i'll enjoy this while i can...
+SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(==, bool_vector)
+SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(!=, disjunctive_bool_vector)
+SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(>, bool_vector)
+SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(>=, bool_vector)
+SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<, bool_vector)
+SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 #undef SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR
 
 		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>

@@ -38,6 +38,14 @@ void EqualityComparison()
 	int4 p3(4, 3, 2, 1);
 	assert(p == p2);
 	assert(p != p3);
+	assert( vector(1,2,3,4,5) != vector(0,0,0,0,5) ); // at some point this wasn't the case, and no other test caught it -_-
+	assert( !(vector(1,2,3,4,5) == vector(0,0,0,0,5)) );
+	assert(not( ~(vector(1,2,3,4,5) == vector(0,0,0,0,5)) ));
+	const auto a = vector(true, true, true, true);
+	const auto b = vector(false, false, false, true);
+	assert( ~(a == b) == (a ^ b) );
+	assert( (a != b) == (a ^ b) );
+	assert( bool(a != b) != bool(a ^ b) );
 }
 
 void OtherConstruction()
