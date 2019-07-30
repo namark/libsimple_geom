@@ -148,7 +148,7 @@ constexpr bool Constexprness()
 {
 	constexpr int3x3 A{}, B{};
 	constexpr int3 a{}, b{};
-	A(B); B(A); A(a); B(a); a(b);
+	void(A(B)); void(B(A)); void(A(a)); void(B(a)); void(a(b));
 	return true;
 }
 

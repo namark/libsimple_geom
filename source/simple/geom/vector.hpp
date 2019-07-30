@@ -39,8 +39,11 @@ namespace simple::geom
 		using value_type = Coordinate;
 		static constexpr size_t dimensions = Dimensions;
 
+		[[nodiscard]]
 		static constexpr vector zero() { return vector{}; }
+		[[nodiscard]]
 		static constexpr vector one() { return vector{support::filled_array<Dimensions>(value_type{1})}; }
+		[[nodiscard]]
 		static constexpr vector one(const Coordinate& scaler) { return vector{support::filled_array<Dimensions>(scaler)}; }
 
 		enum : size_t
@@ -54,18 +57,21 @@ namespace simple::geom
 		};
 
 		template <size_t index>
+		[[nodiscard]]
 		static constexpr vector unit()
 		{
 			return unit<index>(Coordinate{1});
 		}
 
 		template <size_t index>
+		[[nodiscard]]
 		static constexpr vector unit(const Coordinate& one)
 		{
 			return unit<index>(one, Coordinate{});
 		}
 
 		template <size_t index>
+		[[nodiscard]]
 		static constexpr vector unit(const Coordinate& one, const Coordinate& zero)
 		{
 			static_assert(index < dimensions, "");
@@ -73,11 +79,13 @@ namespace simple::geom
 				{ return index == i ? one : zero; } )};
 		}
 
+		[[nodiscard]]
 		static constexpr vector unit(size_t index)
 		{
 			return unit(index, Coordinate{1});
 		}
 
+		[[nodiscard]]
 		static constexpr vector unit(size_t index, const Coordinate& one)
 		{
 			vector ret{};
@@ -85,6 +93,7 @@ namespace simple::geom
 			return ret;
 		}
 
+		[[nodiscard]]
 		static constexpr vector unit(size_t index, const Coordinate& one, const Coordinate& zero)
 		{
 			vector ret = vector::one(zero);
@@ -92,14 +101,14 @@ namespace simple::geom
 			return ret;
 		}
 
-		static constexpr vector i() { return unit<x_index>(); }
-		static constexpr vector j() { return unit<y_index>(); }
-		static constexpr vector k() { return unit<z_index>(); }
-		static constexpr vector l() { return unit<w_index>(); }
-		static constexpr vector i(const Coordinate& scaler) { return unit<x_index>(scaler); }
-		static constexpr vector j(const Coordinate& scaler) { return unit<y_index>(scaler); }
-		static constexpr vector k(const Coordinate& scaler) { return unit<z_index>(scaler); }
-		static constexpr vector l(const Coordinate& scaler) { return unit<w_index>(scaler); }
+		[[nodiscard]] static constexpr vector i() { return unit<x_index>(); }
+		[[nodiscard]] static constexpr vector j() { return unit<y_index>(); }
+		[[nodiscard]] static constexpr vector k() { return unit<z_index>(); }
+		[[nodiscard]] static constexpr vector l() { return unit<w_index>(); }
+		[[nodiscard]] static constexpr vector i(const Coordinate& scaler) { return unit<x_index>(scaler); }
+		[[nodiscard]] static constexpr vector j(const Coordinate& scaler) { return unit<y_index>(scaler); }
+		[[nodiscard]] static constexpr vector k(const Coordinate& scaler) { return unit<z_index>(scaler); }
+		[[nodiscard]] static constexpr vector l(const Coordinate& scaler) { return unit<w_index>(scaler); }
 
 		private:
 		// Coordinate raw[Dimensions];
@@ -186,18 +195,21 @@ namespace simple::geom
 		{
 		}
 
-		explicit operator const array () const noexcept
+		[[nodiscard]]
+		explicit constexpr operator const array () const noexcept
 		{
 			return raw;
 		}
 
 		template<size_t D = Dimensions, std::enable_if_t<D == 1>* = nullptr>
-		operator const Coordinate & () const noexcept
+		[[nodiscard]]
+		constexpr operator const Coordinate & () const noexcept
 		{
 			return raw[0];
 		}
 
 		template <typename Another>
+		[[nodiscard]]
 		constexpr Another mutantClone(typename Another::coordinate_type(*method)(const vector::coordinate_type&)) const&
 		{
 			static_assert(Another::dimensions == Dimensions, " Dimension mismatch. ");
@@ -207,6 +219,7 @@ namespace simple::geom
 		}
 
 		template <typename Function, typename AnotherCoord = std::invoke_result_t<Function, Coordinate>>
+		[[nodiscard]]
 		constexpr vector<AnotherCoord, Dimensions> mutant_clone(const Function& transform) const&
 		{
 			vector<AnotherCoord, Dimensions> another{};
@@ -215,6 +228,7 @@ namespace simple::geom
 		}
 
 		template<size_t... CoordinateIndices, typename Mixed = vector<Coordinate, sizeof...(CoordinateIndices)> >
+		[[nodiscard]]
 		constexpr Mixed mix() const
 		{
 			Mixed result{};
@@ -223,6 +237,7 @@ namespace simple::geom
 		}
 
 		template<size_t... CoordinateIndices, typename Mixed = vector<Coordinate, sizeof...(CoordinateIndices)> >
+		[[nodiscard]]
 		constexpr Mixed mix(const Coordinate& default_value) const
 		{
 			Mixed result{};
@@ -231,6 +246,7 @@ namespace simple::geom
 		}
 
 		template <size_t N, typename Mixed = vector<Coordinate, N>>
+		[[nodiscard]]
 		constexpr Mixed mix(const support::array<Coordinate,N>& indices) const
 		{
 			Mixed result{};
@@ -246,6 +262,7 @@ namespace simple::geom
 		}
 
 		template <size_t N, typename Mixed = vector<Coordinate, N>>
+		[[nodiscard]]
 		constexpr Mixed mix(const support::array<Coordinate,N>& indices, const Coordinate& default_value) const
 		{
 			Mixed result{};
@@ -259,6 +276,7 @@ namespace simple::geom
 		}
 
 		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>
+		[[nodiscard]]
 		constexpr operator bool() const noexcept
 		{
 			for(auto&& c : raw)
@@ -267,6 +285,7 @@ namespace simple::geom
 		}
 
 		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,detail::disjunctive_bool>>* = nullptr>
+		[[nodiscard]]
 		constexpr operator bool() const noexcept
 		{
 			for(auto&& c : raw)
@@ -292,6 +311,7 @@ namespace simple::geom
 
 
 #define SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(op, return_type) \
+		[[nodiscard]] \
 		constexpr return_type operator op(const vector & another) const \
 		{ \
 			return_type ret{}; \
@@ -310,6 +330,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 #undef SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR
 
 		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>
+		[[nodiscard]]
 		friend
 		constexpr vector operator ~(vector one) noexcept
 		{
@@ -319,6 +340,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 		}
 
 		template <size_t dimension>
+		[[nodiscard]]
 		constexpr const coordinate_type & get() const&
 		{
 			static_assert(dimension < Dimensions);
@@ -327,6 +349,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 		}
 
 		template <size_t dimension>
+		[[nodiscard]]
 		constexpr coordinate_type & get() &
 		{
 			static_assert(dimension < Dimensions);
@@ -334,29 +357,31 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 			return raw[index];
 		}
 
+		[[nodiscard]]
 		constexpr const coordinate_type & operator[](size_t dimension) const&
 		{
 			return raw[dimension];
 		}
 
+		[[nodiscard]]
 		constexpr coordinate_type & operator[](size_t dimension) &
 		{
 			return raw[dimension];
 		}
 
-		constexpr auto begin() noexcept { return std::begin(raw); }
-		constexpr auto end() noexcept { return std::end(raw); }
-		constexpr auto begin() const noexcept { return std::cbegin(raw); }
-		constexpr auto end() const noexcept { return std::cend(raw); }
-		constexpr auto cbegin() const noexcept { return std::cbegin(raw); }
-		constexpr auto cend() const noexcept { return std::cend(raw); }
+		[[nodiscard]] constexpr auto begin() noexcept { return std::begin(raw); }
+		[[nodiscard]] constexpr auto end() noexcept { return std::end(raw); }
+		[[nodiscard]] constexpr auto begin() const noexcept { return std::cbegin(raw); }
+		[[nodiscard]] constexpr auto end() const noexcept { return std::cend(raw); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept { return std::cbegin(raw); }
+		[[nodiscard]] constexpr auto cend() const noexcept { return std::cend(raw); }
 
-		constexpr auto rbegin() noexcept { return std::rbegin(raw); }
-		constexpr auto rend() noexcept { return std::rend(raw); }
-		constexpr auto rbegin() const noexcept { return std::crbegin(raw); }
-		constexpr auto rend() const noexcept { return std::crend(raw); }
-		constexpr auto crbegin() const noexcept { return std::crbegin(raw); }
-		constexpr auto crend() const noexcept { return std::crend(raw); }
+		[[nodiscard]] constexpr auto rbegin() noexcept { return std::rbegin(raw); }
+		[[nodiscard]] constexpr auto rend() noexcept { return std::rend(raw); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept { return std::crbegin(raw); }
+		[[nodiscard]] constexpr auto rend() const noexcept { return std::crend(raw); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept { return std::crbegin(raw); }
+		[[nodiscard]] constexpr auto crend() const noexcept { return std::crend(raw); }
 
 		constexpr vector& min(const vector& other)
 		{
@@ -422,6 +447,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 			return *this;
 		};
 
+		[[nodiscard]]
 		constexpr Coordinate magnitude() const
 		{
 			Coordinate result = Coordinate{};
@@ -430,11 +456,13 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 			return result;
 		}
 
+		[[nodiscard]]
 		constexpr Coordinate quadrance() const
 		{
 			return magnitude();
 		}
 
+		[[nodiscard]]
 		constexpr Coordinate length() const
 		{
 			using std::sqrt;
@@ -453,6 +481,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 			return *this;
 		}
 
+		[[nodiscard]]
 		constexpr vector operator++(int) &
 		{
 			vector temp{};
@@ -461,6 +490,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 			return temp;
 		}
 
+		[[nodiscard]]
 		constexpr vector operator--(int) &
 		{
 			vector temp{};
@@ -472,7 +502,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 		template <typename T, typename = std::nullptr_t>
 		struct can_apply_s { constexpr static bool value = false; };
 		template <typename T>
-		struct can_apply_s<T, decltype(std::declval<vector>()(std::declval<T>()), nullptr)> { constexpr static bool value = true; };
+		struct can_apply_s<T, decltype(void(std::declval<vector>()(std::declval<T>())), nullptr)> { constexpr static bool value = true; };
 		template <typename T>
 		constexpr static bool can_apply = can_apply_s<T>::value;
 
@@ -480,6 +510,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 		template<typename AnotherComponent, size_t AnotherDimesnions, typename AnotherOrder,
 			std::enable_if_t<std::is_same_v<Order,AnotherOrder> || can_apply<AnotherComponent>>* = nullptr,
 			typename Return = std::conditional_t<can_apply<AnotherComponent>, vector<Coordinate, AnotherDimesnions, AnotherOrder>, Coordinate>>
+		[[nodiscard]]
 		constexpr Return operator()(const vector<AnotherComponent, AnotherDimesnions, AnotherOrder> & another) const
 		{
 			Return ret{};
@@ -491,64 +522,75 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 			return ret;
 		}
 
+		[[nodiscard]]
 		constexpr Coordinate& x()
 		{
 			static_assert( Dimensions > x_index );
 			return raw[x_index];
 		}
 
+		[[nodiscard]]
 		constexpr const Coordinate& x() const
 		{
 			static_assert( Dimensions > x_index );
 			return raw[x_index];
 		}
 
+		[[nodiscard]]
 		constexpr Coordinate& y()
 		{
 			static_assert( Dimensions > y_index );
 			return raw[y_index];
 		}
 
+		[[nodiscard]]
 		constexpr const Coordinate& y() const
 		{
 			static_assert( Dimensions > y_index );
 			return raw[y_index];
 		}
 
+		[[nodiscard]]
 		constexpr Coordinate& z()
 		{
 			static_assert( Dimensions > z_index );
 			return raw[z_index];
 		}
 
+		[[nodiscard]]
 		constexpr const Coordinate& z() const
 		{
 			static_assert( Dimensions > z_index );
 			return raw[z_index];
 		}
 
+		[[nodiscard]]
 		constexpr Coordinate& w()
 		{
 			static_assert( Dimensions > w_index );
 			return raw[w_index];
 		}
 
+		[[nodiscard]]
 		constexpr const Coordinate& w() const
 		{
 			static_assert( Dimensions > w_index );
 			return raw[w_index];
 		}
 
+		[[nodiscard]]
 		constexpr vector<Coordinate,2> xy() const
 		{
 			return mix<x_index, y_index>();
 		}
 
+		[[nodiscard]]
 		constexpr vector<Coordinate,3> xyz() const
 		{
 			return mix<x_index, y_index, z_index>();
 		}
 
+		[[nodiscard]]
 		constexpr vector<Coordinate,3> xyz(const Coordinate& default_value) const
 		{
 			return mix<x_index, y_index, z_index>(default_value);
@@ -557,6 +599,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 	};
 
 	template <typename C, size_t D, typename O>
+	[[nodiscard]]
 	constexpr
 	vector<C,D,O> min(const vector<C,D,O> & one, const vector<C,D,O> & other)
 	{
@@ -565,6 +608,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 	}
 
 	template <typename C, size_t D, typename O>
+	[[nodiscard]]
 	constexpr
 	vector<C,D,O> max(const vector<C,D,O> & one, const vector<C,D,O> & other)
 	{
@@ -573,6 +617,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 	}
 
 	template <typename C, size_t D, typename O>
+	[[nodiscard]]
 	constexpr
 	vector<C,D,O> clamp(vector<C,D,O> v, const vector<C,D,O> & lo, const vector<C,D,O> & hi)
 	{
@@ -581,6 +626,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 	}
 
 	template <typename C, size_t D, typename O>
+	[[nodiscard]]
 	constexpr
 	vector<C,D,O> floor(vector<C,D,O> v)
 	{
@@ -589,6 +635,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 	}
 
 	template <typename C, size_t D, typename O>
+	[[nodiscard]]
 	constexpr
 	vector<C,D,O> ceil(vector<C,D,O> v)
 	{
@@ -597,6 +644,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 	}
 
 	template <typename C, size_t D, typename O>
+	[[nodiscard]]
 	constexpr
 	vector<C,D,O> round(vector<C,D,O> v)
 	{
@@ -605,6 +653,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 	}
 
 	template <typename C, size_t D, typename O>
+	[[nodiscard]]
 	constexpr
 	vector<C,D,O> abs(vector<C,D,O> v)
 	{
@@ -613,6 +662,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 	}
 
 	template <typename C, size_t D, typename O>
+	[[nodiscard]]
 	constexpr
 	C magnitude(const vector<C,D,O>& v)
 	{
@@ -620,6 +670,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 	}
 
 	template <typename C, size_t D, typename O>
+	[[nodiscard]]
 	constexpr
 	C quadrance(const vector<C,D,O>& v)
 	{
@@ -627,6 +678,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 	}
 
 	template <typename C, size_t D, typename O>
+	[[nodiscard]]
 	constexpr
 	C length(const vector<C,D,O>& v)
 	{
@@ -634,6 +686,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 	}
 
 	template <typename C, size_t D, typename O>
+	[[nodiscard]]
 	constexpr
 	auto signum(vector<C,D,O> v)
 	{
@@ -725,6 +778,7 @@ class std::numeric_limits<simple::geom::vector<T,C,O>>
 	public:
 	constexpr static bool is_specialized = limits::is_specialized;
 
+	[[nodiscard]]
 	constexpr static vec min()
 	{
 		static_assert(limits::is_specialized);
@@ -734,6 +788,7 @@ class std::numeric_limits<simple::geom::vector<T,C,O>>
 		return m;
 	}
 
+	[[nodiscard]]
 	constexpr static vec max()
 	{
 		static_assert(limits::is_specialized);
