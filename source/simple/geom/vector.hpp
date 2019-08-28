@@ -789,6 +789,16 @@ class std::numeric_limits<simple::geom::vector<T,C,O>>
 	}
 
 	[[nodiscard]]
+	constexpr static vec lowest()
+	{
+		static_assert(limits::is_specialized);
+		vec m{};
+		for(auto&& c : m)
+			c = limits::lowest();
+		return m;
+	}
+
+	[[nodiscard]]
 	constexpr static vec max()
 	{
 		static_assert(limits::is_specialized);
