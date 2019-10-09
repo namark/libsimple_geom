@@ -344,17 +344,35 @@ void Algorithms()
 	assert( int4(-1, 3, -3, 1) == p3);
 
 	float4 fp (1.1f, 3.4f, 4.5f, 8.9f);
+	assert( float4(1.f, 3.f, 4.f, 8.f) == trunc(fp) );
 	assert( float4(1.f, 3.f, 4.f, 8.f) == floor(fp) );
 	assert( float4(2.f, 4.f, 5.f, 9.f) == ceil(fp) );
 	assert( float4(1.f, 3.f, 5.f, 9.f) == round(fp) );
 
 	float4 fp2;
+	(fp2 = fp).trunc();
+	assert( float4(1.f, 3.f, 4.f, 8.f) == fp2 );
 	(fp2 = fp).floor();
 	assert( float4(1.f, 3.f, 4.f, 8.f) == fp2 );
 	(fp2 = fp).ceil();
 	assert( float4(2.f, 4.f, 5.f, 9.f) == fp2 );
 	(fp2 = fp).round();
 	assert( float4(1.f, 3.f, 5.f, 9.f) == fp2 );
+
+	fp = float4(1.1f, -3.4f, 4.5f, -8.9f);
+	assert( float4(1.f, -3.f, 4.f, -8.f) == trunc(fp) );
+	assert( float4(1.f, -4.f, 4.f, -9.f) == floor(fp) );
+	assert( float4(2.f, -3.f, 5.f, -8.f) == ceil(fp) );
+	assert( float4(1.f, -3.f, 5.f, -9.f) == round(fp) );
+
+	(fp2 = fp).trunc();
+	assert( float4(1.f, -3.f, 4.f, -8.f) == fp2 );
+	(fp2 = fp).floor();
+	assert( float4(1.f, -4.f, 4.f, -9.f) == fp2 );
+	(fp2 = fp).ceil();
+	assert( float4(2.f, -3.f, 5.f, -8.f) == fp2 );
+	(fp2 = fp).round();
+	assert( float4(1.f, -3.f, 5.f, -9.f) == fp2 );
 
 	int4 p4 (2, 6, 3, 0);
 	assert( p4.magnitude() ==  49);

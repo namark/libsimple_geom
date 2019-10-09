@@ -431,6 +431,14 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 			return *this;
 		}
 
+		constexpr vector& trunc()
+		{
+			using std::trunc;
+			for(auto&& coord : raw)
+				coord = trunc(coord);
+			return *this;
+		}
+
 		constexpr vector& abs()
 		{
 			using std::abs;
@@ -649,6 +657,15 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 	vector<C,D,O> round(vector<C,D,O> v)
 	{
 		v.round();
+		return v;
+	}
+
+	template <typename C, size_t D, typename O>
+	[[nodiscard]]
+	constexpr
+	vector<C,D,O> trunc(vector<C,D,O> v)
+	{
+		v.trunc();
 		return v;
 	}
 
