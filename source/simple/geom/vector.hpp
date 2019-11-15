@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <ostream>
 #include <numeric>
+#include <cassert>
 
 #include "simple/support/logic.hpp"
 #include "simple/support/carcdr.hpp"
@@ -275,7 +276,8 @@ namespace simple::geom
 			return result;
 		}
 
-		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>
+		template <typename C = Coordinate, size_t D = Dimensions,
+			 std::enable_if_t<std::is_same_v<C,bool> && (D != 1)>* = nullptr>
 		[[nodiscard]]
 		constexpr operator bool() const noexcept
 		{
@@ -360,14 +362,105 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 		[[nodiscard]]
 		constexpr const coordinate_type & operator[](size_t dimension) const&
 		{
+			assert(dimension < Dimensions);
 			return raw[dimension];
 		}
 
 		[[nodiscard]]
 		constexpr coordinate_type & operator[](size_t dimension) &
 		{
+			assert(dimension < Dimensions);
 			return raw[dimension];
 		}
+
+		// TODO: not sure if it's ok that this is backwards
+		// make sure to change meta::dimensions as well if change this
+		// maybe make use of order parameter to decide
+		// also definitely not ok that const and non const are so duplicated
+		template <typename IndexType, size_t Size, typename O, size_t Depth = Size,
+			std::enable_if_t<(Depth > 1)>* = nullptr>
+		[[nodiscard]]
+		constexpr auto & operator[](vector<IndexType,Size,O> index) &
+		{
+			return operator[](index[Depth - 1])
+				.template operator[]<IndexType, Size, O, Depth-1>(index);
+		}
+		template <typename IndexType, size_t Size, typename O, size_t Depth,
+			std::enable_if_t<Depth == 1>* = nullptr>
+		[[nodiscard]]
+		constexpr coordinate_type & operator[](vector<IndexType,Size,O> index) &
+		{
+			return operator[](index[0]);
+		}
+
+		template <typename IndexType, size_t Size, size_t Depth = Size, typename O,
+			std::enable_if_t<(Depth > 1)>* = nullptr>
+		[[nodiscard]]
+		constexpr const auto & operator[](vector<IndexType,Size> index) const&
+		{
+			return raw[index[Depth - 1]]
+				.template operator[]<IndexType, Size, O, Depth-1>(index);
+		}
+		template <typename IndexType, size_t Size, typename O, size_t Depth,
+			std::enable_if_t<Depth == 1>* = nullptr>
+		[[nodiscard]]
+		constexpr const coordinate_type & operator[](vector<IndexType,Size,O> index) const&
+		{
+			return raw[index[0]];
+		}
+
+		class meta
+		{
+			template <typename T, typename = std::nullptr_t>
+			struct has_dimesntions_s { constexpr static bool value = false; };
+			template <typename T>
+			struct has_dimesntions_s<T, decltype(void(T::dimensions), nullptr)> { constexpr static bool value = true; };
+			template <typename T>
+			constexpr static bool has_dimesntions = has_dimesntions_s<T>::value;
+
+			public:
+			template <typename C = coordinate_type,
+				 std::enable_if_t<has_dimesntions<C>>* = nullptr>
+			constexpr static size_t depth()
+			{
+				return depth<typename C::coordinate_type>() + 1;
+			}
+			template <typename C = coordinate_type,
+				 std::enable_if_t<not(has_dimesntions<C>)>* = nullptr>
+			constexpr static size_t depth()
+			{
+				return 1;
+			}
+
+			private:
+			template <size_t DepthIndex = depth(), typename Vector = vector>
+			static constexpr size_t get_sub_dimentions()
+			{
+				static_assert( DepthIndex < depth(), "Invalid depth" );
+				if constexpr (DepthIndex == 0)
+					return Vector::dimensions;
+				else return get_sub_dimentions<DepthIndex-1, typename Vector::coordinate_type>();
+			}
+
+			template <typename O, typename SizeType = size_t, size_t DepthIndex = 0, size_t Depth = depth()>
+			static constexpr void set_sub_dimentions(vector<SizeType,Depth,O>& out)
+			{
+				out[Depth - 1 - DepthIndex] = get_sub_dimentions<DepthIndex>();
+				if constexpr (DepthIndex+1 < Depth)
+					set_sub_dimentions<O,SizeType,DepthIndex+1>(out);
+			}
+
+			template <typename SizeType = size_t, size_t Depth = depth()>
+			static constexpr auto get_dimensions()
+			{
+				vector<SizeType,Depth> ret{};
+				set_sub_dimentions(ret);
+				return ret;
+			}
+			public:
+			template <typename SizeType = size_t, size_t Depth = meta::depth()> // have to explicitly qualify for depth gcc-7
+			static constexpr vector<SizeType,Depth> dimensions = get_dimensions<SizeType,Depth>();
+		};
 
 		[[nodiscard]] constexpr auto begin() noexcept { return std::begin(raw); }
 		[[nodiscard]] constexpr auto end() noexcept { return std::end(raw); }
@@ -768,6 +861,9 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 		-> vector<F, sizeof...(R) + 1>;
 
 	// ugh, clang is really nitpickey about default template arguments
+	// actually, might be this bug
+	// https://stackoverflow.com/questions/57133186/g-and-clang-different-behaviour-when-stdmake-index-sequence-and-stdin
+	// very annoying in many different places :/
 	template <typename C, size_t D, typename O, void* SFINAE> vector(vector<C,D,O,SFINAE>)
 		-> vector<vector<C,D,O,SFINAE>,1>;
 

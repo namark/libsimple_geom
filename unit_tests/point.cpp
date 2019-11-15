@@ -106,6 +106,107 @@ void Mixing()
 	assert( (geom::vector<int, 3>{1,2,0} == p.mix<3>({0,1,4}, 0)) );
 }
 
+void MultidimensionalElementAccess()
+{
+
+	auto spiral_walk = [](auto room)
+	{
+		constexpr auto csize = decltype(room)::meta::template dimensions<int>;
+		vector <
+			std::remove_reference_t<decltype(room[csize-1])>,
+			csize.x()*csize.y()
+		> ret{};
+
+		auto size = csize;
+		size_t i = 0;
+
+		auto direction = 1;
+		auto begin = vector(-1,0);
+		while(size > vector(0,0))
+		{
+			auto end = begin + direction * (size - vector(0,1)) ;
+
+			do
+			{
+				begin.x() += direction;
+				ret[i++] = room[begin];
+			}
+			while(begin.x() != end.x());
+			while(begin.y() != end.y())
+			{
+				begin.y() += direction;
+				ret[i++] = room[begin];
+			}
+			//do
+
+			--size;
+			direction = -direction;
+		}
+
+		return ret;
+	};
+
+	assert( spiral_walk(vector(
+		vector(1,2,3),
+		vector(4,5,6),
+		vector(7,8,9)
+	)) == vector(1,2,3,6,9,8,7,4,5));
+
+	assert( spiral_walk(vector(
+		vector(1),
+		vector(2)
+	)) == vector(1,2));
+
+	assert( spiral_walk(vector(
+		vector(1)
+	)) == vector(1));
+
+	assert( spiral_walk(vector(
+		vector(1,2)
+	)) == vector(1,2));
+
+	// // well clang really doesn't like zero size vectors so...
+	// assert( spiral_walk(vector(
+	// 	vector<int,0>()
+	// )) == (vector<int,0>{}));
+    //
+	// assert( spiral_walk(vector(
+	// 	vector<int,0>(),
+	// 	vector<int,0>(),
+	// 	vector<int,0>(),
+	// 	vector<int,0>()
+	// )) == (vector<int,0>{}));
+	//
+	// assert( spiral_walk(vector<vector<int,10>,0>()
+	// ) == (vector<int,0>{}));
+
+	assert( spiral_walk(vector(
+		vector(1,2),
+		vector(3,4)
+	)) == vector(1,2,4,3));
+
+	assert( spiral_walk(vector(
+		vector( 1, 2, 3, 4),
+		vector( 5, 6, 7, 8),
+		vector( 9,10,11,12)
+	)) == vector(1,2,3,4,8,12,11,10,9,5,6,7));
+
+	assert( spiral_walk(vector(
+		vector( 1, 2, 3),
+		vector( 4, 5, 6),
+		vector( 7, 8, 9),
+		vector(10,11,12)
+	)) == vector(1,2,3,6,9,12,11,10,7,4,5,8));
+
+	assert( spiral_walk(vector(
+		vector( 1, 2, 3, 4),
+		vector( 5, 6, 7, 8),
+		vector( 9,10,11,12),
+		vector(13,14,15,16)
+	)) == vector(1,2,3,4,8,12,16,15,14,13,9,5,6,7,11,10));
+
+}
+
 void RangeBasedLooping()
 {
 	const float4 p{1.0f, 2.0f, 3.0f, 4.0f};
@@ -454,6 +555,7 @@ int main()
 	OtherConstruction();
 	Mutation();
 	Mixing();
+	MultidimensionalElementAccess();
 	RangeBasedLooping();
 	Arithmetic();
 	DiscreteArithmetic();
