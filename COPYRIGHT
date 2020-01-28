@@ -1,10 +1,12 @@
 /*
 	libsimple_geom - a geometric library that wants to be
 	https://notabug.org/namark/libsimple_geom
+	https://git.sr.ht/~namark/libsimple_geom
+	https://git.qoto.org/namark/libsimple_geom
 	https://gitlab.com/namark/libsimple_geom
 	https://github.com/namark/libsimple_geom
 
-	Copyright (C) 2017-2019 respective authors/contributors
+	Copyright (C) 2017-2020 respective authors/contributors
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
