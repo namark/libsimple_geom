@@ -174,6 +174,7 @@ namespace simple::geom
 			: raw {std::forward<Coordinates>(coordinates)...}
 		{}
 
+		// TODO: constexpr and forwarding
 		template <typename Another, is_convertible_to_me<Another>* = nullptr,
 		std::enable_if_t<std::is_same_v<typename Another::order, Order>> *...>
 		explicit vector(const Another& another)
@@ -181,6 +182,7 @@ namespace simple::geom
 			std::copy(another.begin(), another.end(), begin());
 		}
 
+		// TODO: forwarding
 		template <typename Another, is_convertible_to_me<Another>* = nullptr,
 		std::enable_if_t<!std::is_same_v<typename Another::order, Order>> *...>
 		constexpr explicit vector(const Another& another) : raw{}
@@ -210,7 +212,7 @@ namespace simple::geom
 		}
 
 		template <typename Another>
-		[[nodiscard]]
+		[[nodiscard]] [[deprecated("use mutant_clone instead")]]
 		constexpr Another mutantClone(typename Another::coordinate_type(*method)(const vector::coordinate_type&)) const&
 		{
 			static_assert(Another::dimensions == Dimensions, " Dimension mismatch. ");
@@ -221,13 +223,21 @@ namespace simple::geom
 
 		template <typename Function, typename AnotherCoord = std::invoke_result_t<Function, Coordinate>>
 		[[nodiscard]]
-		constexpr vector<AnotherCoord, Dimensions> mutant_clone(const Function& transform) const&
+		constexpr vector<AnotherCoord, Dimensions, Order> mutant_clone(Function&& transform) const&
 		{
 			vector<AnotherCoord, Dimensions> another{};
-			std::transform(begin(), end(), another.begin(), transform);
+			for(size_t i = 0; i < Dimensions; ++i)
+			{
+				// std::invoke is not constexpr -_-
+				another[i] = std::apply(
+					std::forward<Function>(transform),
+					std::forward_as_tuple((*this)[i])
+				);
+			}
 			return another;
 		}
 
+		// TODO: mix should preserve order if mixed size >= original size
 		template<size_t... CoordinateIndices, typename Mixed = vector<Coordinate, sizeof...(CoordinateIndices)> >
 		[[nodiscard]]
 		constexpr Mixed mix() const
@@ -273,6 +283,28 @@ namespace simple::geom
 				index = indices[i];
 				result[i] = index < Dimensions ? raw[index] : default_value;
 			}
+			return result;
+		}
+
+		template <size_t N,
+			 std::enable_if_t<N <= Dimensions>* = nullptr>
+		[[nodiscard]]
+		constexpr vector<Coordinate,N> last() const
+		{
+			vector<Coordinate,N> result{};
+			for(size_t i = 0; i < N; ++i)
+				result[i] = (*this)[Dimensions-N+i];
+			return result;
+		}
+
+		template <size_t N,
+			 std::enable_if_t<N <= Dimensions>* = nullptr>
+		[[nodiscard]]
+		constexpr vector<Coordinate,N> first() const
+		{
+			vector<Coordinate,N> result{};
+			for(size_t i = 0; i < N; ++i)
+				result[i] = (*this)[i];
 			return result;
 		}
 

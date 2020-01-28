@@ -87,10 +87,8 @@ void Mutation()
 	float4 p {1.3f, 1.5f, 2.1f, 4.6f};
 	int4 p2 {1, 2, 2, 5};
 	int4 p3 {1, 1, 2, 4};
-	assert( p2 == p.mutantClone<int4>( [](auto x) -> int { return std::round(x); } ));
-	assert( p3 == p.mutantClone<int4>( [](auto x) -> int { return x; } ));
 	assert( p2 == p.mutant_clone( [](auto x) -> int { return std::round(x); } ));
-	assert( p3 == p.mutant_clone( [](auto x) -> int { return x; } ));
+	assert( p3 == p.mutant_clone( [](auto x) { return int(x); } ));
 }
 
 void Mixing()
@@ -104,6 +102,9 @@ void Mixing()
 	assert( (geom::vector<int, 6>{3,3,3,2,2,1} == p.mix<6>({2,2,2,1,1,0})) );
 	assert( (geom::vector<int, 3>{1,2,0} == p.mix<0,1,4>(0)) );
 	assert( (geom::vector<int, 3>{1,2,0} == p.mix<3>({0,1,4}, 0)) );
+
+	assert( (vector(1,2) == p.first<2>()) );
+	assert( (vector(2,3,4) == p.last<3>()) );
 }
 
 void MultidimensionalElementAccess()
