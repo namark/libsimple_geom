@@ -4,6 +4,8 @@
 
 #include <functional>
 
+#include "simple/support/algorithm.hpp"
+
 namespace simple::geom
 {
 
@@ -48,6 +50,36 @@ namespace simple::geom
 		vector<Coordinate, Dimensions, Order> index{};
 		loop_on(index, lower, upper, step,
 			 std::forward<Function>(callback));
+	}
+
+	template <typename Coordinate,
+		size_t Rows, size_t Columns,
+		typename RowOrder, typename ColumnOrder
+	>
+	constexpr auto gauss_jordan_elimination
+	(
+		vector<
+			vector<Coordinate, Columns, ColumnOrder>,
+			Rows, RowOrder
+		> m
+	)
+	{
+		constexpr size_t D = std::min(Rows, Columns);
+		for( size_t i = 0; i < D; ++i)
+		{
+			auto pivot = std::max_element(m.begin()+i, m.end(), [&i](auto a, auto b)
+			{
+				using std::abs;
+				return abs(a[i]) < abs(b[i]);
+			});
+			support::swap(*pivot, m[i]);
+			m[i] /= +m[i][i]; // ouch, easy to shoot foot here
+			for(size_t j = i+1; j < D; ++j)
+				m[j] -=	m[i] * m[j][i];
+			for(size_t j = i; j --> 0;)
+				m[j] -=	m[i] * m[j][i];
+		}
+		return m;
 	}
 
 } // namespace simple::geom

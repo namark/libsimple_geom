@@ -1,7 +1,9 @@
-#include "simple/geom/algorithm.hpp"
 #include <cmath>
 #include <cassert>
 #include <vector>
+
+#include "simple/support/math.hpp"
+#include "simple/geom/algorithm.hpp"
 
 using namespace simple;
 using geom::vector;
@@ -131,8 +133,134 @@ void MultidimentionalIteration()
 	assert(data == test_data);
 }
 
+struct rational
+{
+	long long num = 0;
+	long long den = 1;
+
+	constexpr
+	bool operator < (const rational& other) const
+	{ return num * other.den < other.num * den; }
+
+	constexpr
+	bool operator == (const rational& other) const
+	{ return num * other.den == other.num * den; }
+
+	constexpr
+	rational operator+() { return *this; } const
+	constexpr
+
+	rational operator*(const rational& other) const
+	{ return {num*other.num, den*other.den}; }
+	constexpr
+
+	void normalize()
+	{
+		auto gcd = std::gcd(num, den);
+		num /= gcd;
+		den /= gcd;
+	}
+
+	constexpr
+	rational& operator/=(const rational& other)
+	{
+		den *= other.num;
+		num *= other.den;
+		normalize();
+		return *this;
+	}
+
+	constexpr
+	rational& operator-=(const rational& other)
+	{
+		num *= other.den;
+		num -= other.num * den;
+		den *= other.den;
+		normalize();
+		return *this;
+	}
+
+	constexpr
+	rational& operator+=(const rational& other)
+	{
+		num *= other.den;
+		num += other.num * den;
+		den *= other.den;
+		normalize();
+		return *this;
+	}
+
+	constexpr
+	rational operator+(const rational& other) const
+	{
+		return rational(*this)+=other;;
+	}
+};
+
+constexpr rational abs(rational r)
+{
+	return {support::abs(r.num) , support::abs(r.den)};
+}
+
+void MatrixElimination()
+{
+	using r = rational;
+
+	auto inverse = gauss_jordan_elimination(vector(
+			vector(r{2},r{0},r{3}, r{1},r{0},r{0}),
+			vector(r{4},r{5},r{6}, r{0},r{1},r{0}),
+			vector(r{7},r{8},r{9}, r{0},r{0},r{1})
+	)).mutant_clone(&vector<r,6>::last<3>);
+	assert ( vector(r{2},r{0},r{3})(inverse) ==
+		vector(r{17,5}, r{-4,5}, r{-8,5}));
+
+	assert( gauss_jordan_elimination(
+		vector(
+			vector(r{2},r{1},r{0}, r{1},r{0},r{0}),
+			vector(r{0},r{2},r{0}, r{0},r{1},r{0}),
+			vector(r{2},r{0},r{1}, r{0},r{0},r{1})
+		))
+		==
+		vector(
+			vector(r{1},r{0},r{0}, r{1,2},r{-1,4},r{0}),
+			vector(r{0},r{1},r{0}, r{0},  r{1,2}, r{0}),
+			vector(r{0},r{0},r{1}, r{-1}, r{1,2},   r{1})
+		)
+	);
+
+	assert( gauss_jordan_elimination(
+		vector(
+			vector(r{1},r{1},r{0}, r{1},r{0},r{0}),
+			vector(r{0},r{1},r{0}, r{0},r{1},r{0}),
+			vector(r{2},r{1},r{1}, r{0},r{0},r{1})
+		))
+		==
+		vector(
+			vector(r{1},r{0},r{0}, r{1}, r{-1},r{0}),
+			vector(r{0},r{1},r{0}, r{0}, r{1}, r{0}),
+			vector(r{0},r{0},r{1}, r{-2},r{1}, r{1})
+		)
+	);
+
+	assert( gauss_jordan_elimination(
+		vector(
+			vector(r{2},r{1},r{0}, r{1},r{0},r{0}),
+			vector(r{2},r{0},r{0}, r{0},r{1},r{0}),
+			vector(r{2},r{0},r{1}, r{0},r{0},r{1})
+		))
+		==
+		vector(
+			vector(r{1},r{0},r{0}, r{0},r{1,2},r{0}),
+			vector(r{0},r{1},r{0}, r{1},r{-1}, r{0}),
+			vector(r{0},r{0},r{1}, r{0},r{-1}, r{1})
+		)
+	);
+
+}
+
 int main()
 {
 	Basic();
 	MultidimentionalIteration();
+	MatrixElimination();
 }

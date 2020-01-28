@@ -22,6 +22,19 @@ namespace simple::geom
 		const vector<Coordinate, Dimensions, Order>& step,
 		Function&& callback
 	);
+
+	template <typename Coordinate,
+		size_t Rows, size_t Columns,
+		typename RowOrder, typename ColumnOrder
+	>
+	constexpr auto gauss_jordan_elimination
+	(
+		vector<
+			vector<Coordinate, Columns, ColumnOrder>,
+			Rows, RowOrder
+		>
+	);
+
 } // namespace simple::geom
 
 #endif /* end of include guard */
