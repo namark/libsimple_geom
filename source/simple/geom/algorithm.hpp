@@ -52,6 +52,32 @@ namespace simple::geom
 			 std::forward<Function>(callback));
 	}
 
+	template <typename Coordinate, size_t Dimensions, typename Order, typename Function, size_t LoopDimesntions = Dimensions>
+	constexpr void loop_on
+	(
+		vector<Coordinate, Dimensions, Order>& index,
+		const support::range<vector<Coordinate, Dimensions, Order>>& bounds,
+		const vector<Coordinate, Dimensions, Order>& step,
+		Function&& callback
+	)
+	{
+		loop_on(index, bounds.lower(), bounds.upper(), step,
+			 std::forward<Function>(callback));
+	}
+
+	template <typename Coordinate, size_t Dimensions, typename Order, typename Function>
+	constexpr void loop
+	(
+		const support::range<vector<Coordinate, Dimensions, Order>>& bounds,
+		const vector<Coordinate, Dimensions, Order>& step,
+		Function&& callback
+	)
+	{
+		vector<Coordinate, Dimensions, Order> index{};
+		loop_on(index, bounds, step,
+			 std::forward<Function>(callback));
+	}
+
 	template <typename Coordinate,
 		size_t Rows, size_t Columns,
 		typename RowOrder, typename ColumnOrder

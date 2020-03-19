@@ -1,6 +1,7 @@
 #ifndef SIMPLE_GEOM_ALGORITHM_H
 #define SIMPLE_GEOM_ALGORITHM_H
 #include "vector.hpp"
+#include "simple/support/range.hpp"
 
 namespace simple::geom
 {
@@ -19,6 +20,23 @@ namespace simple::geom
 	(
 		const vector<Coordinate, Dimensions, Order>& lower,
 		const vector<Coordinate, Dimensions, Order>& upper,
+		const vector<Coordinate, Dimensions, Order>& step,
+		Function&& callback
+	);
+
+	template <typename Coordinate, size_t Dimensions, typename Order, typename Function, size_t LoopDimesntions = Dimensions>
+	constexpr void loop_on
+	(
+		vector<Coordinate, Dimensions, Order>& index,
+		const support::range<vector<Coordinate, Dimensions, Order>>&,
+		const vector<Coordinate, Dimensions, Order>& step,
+		Function&& callback
+	);
+
+	template <typename Coordinate, size_t Dimensions, typename Order, typename Function>
+	constexpr void loop
+	(
+		const support::range<vector<Coordinate, Dimensions, Order>>&,
 		const vector<Coordinate, Dimensions, Order>& step,
 		Function&& callback
 	);
