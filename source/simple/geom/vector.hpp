@@ -40,6 +40,88 @@ namespace simple::geom
 		using value_type = Coordinate;
 		static constexpr size_t dimensions = Dimensions;
 
+		class meta
+		{
+			template <typename T, typename = std::nullptr_t>
+			struct has_dimesntions_s { constexpr static bool value = false; };
+			template <typename T>
+			struct has_dimesntions_s<T, decltype(void(T::dimensions), nullptr)> { constexpr static bool value = true; };
+			template <typename T>
+			constexpr static bool has_dimesntions = has_dimesntions_s<T>::value;
+
+			public:
+			template <typename C = coordinate_type,
+				std::enable_if_t<has_dimesntions<C>>* = nullptr>
+			constexpr static size_t depth()
+			{
+				return depth<typename C::coordinate_type>() + 1;
+			}
+			template <typename C = coordinate_type,
+				std::enable_if_t<not has_dimesntions<C>>* = nullptr>
+			constexpr static size_t depth()
+			{
+				return 1;
+			}
+
+			private:
+			template <size_t DepthIndex = depth(), typename Vector = vector>
+			static constexpr size_t get_sub_dimentions()
+			{
+				static_assert( DepthIndex < depth(), "Invalid depth" );
+				if constexpr (DepthIndex == 0)
+					return Vector::dimensions;
+				else return get_sub_dimentions<DepthIndex-1, typename Vector::coordinate_type>();
+			}
+
+			template <typename O, typename SizeType = size_t, size_t DepthIndex = 0, size_t Depth = depth()>
+			static constexpr void set_sub_dimentions(vector<SizeType,Depth,O>& out)
+			{
+				out[Depth - 1 - DepthIndex] = get_sub_dimentions<DepthIndex>();
+				if constexpr (DepthIndex+1 < Depth)
+					set_sub_dimentions<O,SizeType,DepthIndex+1>(out);
+			}
+
+			template <typename SizeType = size_t, size_t Depth = depth()>
+			static constexpr auto get_dimensions()
+			{
+				vector<SizeType,Depth> ret{};
+				set_sub_dimentions(ret);
+				return ret;
+			}
+
+			public:
+			template <typename SizeType = size_t, size_t Depth = meta::depth()> // have to explicitly qualify for depth gcc-7
+			static constexpr vector<SizeType,Depth> dimensions = get_dimensions<SizeType,Depth>();
+
+			// unused typename to work around gcc bug
+			// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85282
+			template <typename, size_t Depth = depth(), typename Enabled = void>
+			struct get_coordinate;
+			template <typename U>
+			struct get_coordinate<U, 1, void>
+			{ using type = vector::coordinate_type; };
+			template <typename U, size_t Depth>
+			struct get_coordinate<U, Depth, std::enable_if_t<(Depth > 1)>>
+			{ using type = typename vector::coordinate_type::meta:: template get_coordinate<U, Depth -1>::type; };
+
+			using coordinate_type = typename get_coordinate<void, depth()>::type;
+
+		};
+
+		template <typename NewCoord, typename Meta = meta, typename Enabled = void>
+		struct map_coordinate;
+		template <typename NewCoord, typename Meta>
+		struct map_coordinate<NewCoord, Meta, std::enable_if_t<Meta::depth() <= 1>>
+		{ using type = vector<NewCoord, dimensions, order>; };
+		template <typename NewCoord, typename Meta>
+		struct map_coordinate<NewCoord, Meta, std::enable_if_t<(Meta::depth() > 1)>>
+		{ using type =
+			vector<typename Coordinate::template map_coordinate<NewCoord>::type, dimensions, order>; };
+
+		template <typename NewCoord>
+		using map_coordinate_t = typename map_coordinate<NewCoord>::type;
+
+
 		[[nodiscard]]
 		static constexpr vector zero() { return vector{}; }
 		[[nodiscard]]
@@ -287,7 +369,7 @@ namespace simple::geom
 		}
 
 		template <size_t N,
-			 std::enable_if_t<N <= Dimensions>* = nullptr>
+			std::enable_if_t<N <= Dimensions>* = nullptr>
 		[[nodiscard]]
 		constexpr vector<Coordinate,N> last() const
 		{
@@ -298,7 +380,7 @@ namespace simple::geom
 		}
 
 		template <size_t N,
-			 std::enable_if_t<N <= Dimensions>* = nullptr>
+			std::enable_if_t<N <= Dimensions>* = nullptr>
 		[[nodiscard]]
 		constexpr vector<Coordinate,N> first() const
 		{
@@ -308,27 +390,28 @@ namespace simple::geom
 			return result;
 		}
 
-		template <typename C = Coordinate, size_t D = Dimensions,
-			 std::enable_if_t<std::is_same_v<C,bool> && (D != 1)>* = nullptr>
+		template <typename C = typename meta::coordinate_type, size_t D = Dimensions,
+			std::enable_if_t<std::is_same_v<C,bool> && (D != 1)>* = nullptr>
 		[[nodiscard]]
-		constexpr operator bool() const noexcept
+		constexpr explicit operator bool() const noexcept
 		{
 			for(auto&& c : raw)
 				if(!c) return false;
 			return true;
 		}
 
-		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,detail::disjunctive_bool>>* = nullptr>
+		template <typename C = typename meta::coordinate_type,
+			 std::enable_if_t<std::is_same_v<C,detail::disjunctive_bool>>* = nullptr>
 		[[nodiscard]]
-		constexpr operator bool() const noexcept
+		constexpr explicit operator bool() const noexcept
 		{
 			for(auto&& c : raw)
 				if(c) return true;
 			return false;
 		}
 
-		using bool_vector = vector<bool, Dimensions, Order>;
-		using disjunctive_bool_vector = vector<detail::disjunctive_bool, Dimensions, Order>;
+		using bool_vector = map_coordinate_t<bool>;
+		using disjunctive_bool_vector = map_coordinate_t<detail::disjunctive_bool>;
 
 		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>
 		constexpr vector(const disjunctive_bool_vector& another) noexcept
@@ -440,59 +523,6 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 		{
 			return raw[index[0]];
 		}
-
-		class meta
-		{
-			template <typename T, typename = std::nullptr_t>
-			struct has_dimesntions_s { constexpr static bool value = false; };
-			template <typename T>
-			struct has_dimesntions_s<T, decltype(void(T::dimensions), nullptr)> { constexpr static bool value = true; };
-			template <typename T>
-			constexpr static bool has_dimesntions = has_dimesntions_s<T>::value;
-
-			public:
-			template <typename C = coordinate_type,
-				 std::enable_if_t<has_dimesntions<C>>* = nullptr>
-			constexpr static size_t depth()
-			{
-				return depth<typename C::coordinate_type>() + 1;
-			}
-			template <typename C = coordinate_type,
-				 std::enable_if_t<not(has_dimesntions<C>)>* = nullptr>
-			constexpr static size_t depth()
-			{
-				return 1;
-			}
-
-			private:
-			template <size_t DepthIndex = depth(), typename Vector = vector>
-			static constexpr size_t get_sub_dimentions()
-			{
-				static_assert( DepthIndex < depth(), "Invalid depth" );
-				if constexpr (DepthIndex == 0)
-					return Vector::dimensions;
-				else return get_sub_dimentions<DepthIndex-1, typename Vector::coordinate_type>();
-			}
-
-			template <typename O, typename SizeType = size_t, size_t DepthIndex = 0, size_t Depth = depth()>
-			static constexpr void set_sub_dimentions(vector<SizeType,Depth,O>& out)
-			{
-				out[Depth - 1 - DepthIndex] = get_sub_dimentions<DepthIndex>();
-				if constexpr (DepthIndex+1 < Depth)
-					set_sub_dimentions<O,SizeType,DepthIndex+1>(out);
-			}
-
-			template <typename SizeType = size_t, size_t Depth = depth()>
-			static constexpr auto get_dimensions()
-			{
-				vector<SizeType,Depth> ret{};
-				set_sub_dimentions(ret);
-				return ret;
-			}
-			public:
-			template <typename SizeType = size_t, size_t Depth = meta::depth()> // have to explicitly qualify for depth gcc-7
-			static constexpr vector<SizeType,Depth> dimensions = get_dimensions<SizeType,Depth>();
-		};
 
 		[[nodiscard]] constexpr auto begin() noexcept { return std::begin(raw); }
 		[[nodiscard]] constexpr auto end() noexcept { return std::end(raw); }
