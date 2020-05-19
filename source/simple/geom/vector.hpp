@@ -401,7 +401,7 @@ namespace simple::geom
 		}
 
 		template <typename C = typename meta::coordinate_type,
-			 std::enable_if_t<std::is_same_v<C,detail::disjunctive_bool>>* = nullptr>
+			std::enable_if_t<std::is_same_v<C,detail::disjunctive_bool>>* = nullptr>
 		[[nodiscard]]
 		constexpr explicit operator bool() const noexcept
 		{
@@ -669,10 +669,22 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 		template <typename T>
 		constexpr static bool can_apply = can_apply_s<T>::value;
 
+		// TODO: common declval code between this and can_apply
+		template <typename T, typename = std::nullptr_t>
+		struct product_result_s { using type = Coordinate; };
+		template <typename T>
+		struct product_result_s<T, decltype(void(std::declval<vector>()(std::declval<T>())), nullptr)> { using type = decltype(std::declval<vector>()(std::declval<T>())); };
+		template <typename T>
+		using product_result = typename product_result_s<T>::type;
+
 		// matrix multiplication and matrix-vector multiplication/dot product fusion mutant operator
 		template<typename AnotherComponent, size_t AnotherDimesnions, typename AnotherOrder,
 			std::enable_if_t<std::is_same_v<Order,AnotherOrder> || can_apply<AnotherComponent>>* = nullptr,
-			typename Return = std::conditional_t<can_apply<AnotherComponent>, vector<Coordinate, AnotherDimesnions, AnotherOrder>, Coordinate>>
+			typename Return = std::conditional_t<can_apply<AnotherComponent>,
+				vector<product_result<AnotherComponent>, AnotherDimesnions, AnotherOrder>,
+				Coordinate
+			>
+		>
 		[[nodiscard]]
 		constexpr Return operator()(const vector<AnotherComponent, AnotherDimesnions, AnotherOrder> & another) const
 		{
@@ -906,14 +918,14 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 	std::ostream & operator<<(std::ostream & out, const vector<vector<Coordinate, N, O1>, M, O2> & vector)
 	{
 		for(size_t i = 0; i < N; ++i)
-			out << "---";
+			out << "^";
 		out << "\n";
 
 		for(size_t i = 0; i < M; ++i)
 			out << vector[i] << "\n";
 
 		for(size_t i = 0; i < N; ++i)
-			out << "---";
+			out << "v";
 		out << "\n";
 
 		return out;
