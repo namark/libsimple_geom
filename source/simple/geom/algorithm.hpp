@@ -52,7 +52,7 @@ namespace simple::geom
 			 std::forward<Function>(callback));
 	}
 
-	template <typename Coordinate, size_t Dimensions, typename Order, typename Function, size_t LoopDimesntions = Dimensions>
+	template <typename Coordinate, size_t Dimensions, typename Order, typename Function, size_t LoopDimesntions>
 	constexpr void loop_on
 	(
 		vector<Coordinate, Dimensions, Order>& index,
