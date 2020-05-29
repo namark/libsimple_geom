@@ -40,12 +40,7 @@ void EqualityComparison()
 	assert(p != p3);
 	assert( vector(1,2,3,4,5) != vector(0,0,0,0,5) ); // at some point this wasn't the case, and no other test caught it -_-
 	assert( !(vector(1,2,3,4,5) == vector(0,0,0,0,5)) );
-	assert(not( ~(vector(1,2,3,4,5) == vector(0,0,0,0,5)) ));
-	const auto a = vector(true, true, true, true);
-	const auto b = vector(false, false, false, true);
-	assert( ~(a == b) == (a ^ b) );
-	assert( (a != b) == (a ^ b) );
-	assert( bool(a != b) != bool(a ^ b) );
+	assert( ~(vector(1,2,3,4,5) == vector(0,0,0,0,5)) );
 }
 
 void OtherConstruction()
@@ -414,6 +409,8 @@ void ComparisonOperators()
 	assert(p * int4(p2 < int4::zero()) == int4(0, 2, 0, 0));
 	assert(p * int4(p2 == int4::zero()) == int4(0, 0, 3, 0));
 	assert(p * int4(p2 == int4::zero() | p2 == int4::one()) == int4(1, 0, 3, 4));
+	assert(p * int4(p2 != int4::zero() | p2 == int4::one()) == int4(1, 2, 0, 4));
+	assert(p * int4(p2 != int4::zero() & p2 != int4::one(-2)) == int4(1, 0, 0, 4));
 }
 
 int PotentiallyAmbigous(geom::vector<int, 2>){ return 2; }

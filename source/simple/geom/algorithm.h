@@ -53,6 +53,16 @@ namespace simple::geom
 		>
 	);
 
+
+	template <typename Transform, typename Vector,
+		typename AnotherCoord = std::invoke_result_t<Transform,
+			typename Vector::meta::coordinate_type>,
+		typename Result = typename Vector::
+			template map_coordinate_t<AnotherCoord>
+	>
+	[[nodiscard]] constexpr Result
+	deep_mutant_clone(const Vector&, Transform&&);
+
 } // namespace simple::geom
 
 #endif /* end of include guard */

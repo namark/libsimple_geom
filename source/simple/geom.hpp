@@ -1,4 +1,6 @@
 #include "geom/algorithm.h"
 #include "geom/algorithm.hpp"
+#include "geom/bool_algebra.hpp"
+#include "geom/reduction.hpp"
 #include "geom/segment.hpp"
 #include "geom/vector.hpp"

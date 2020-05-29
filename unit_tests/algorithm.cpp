@@ -212,7 +212,7 @@ void MatrixElimination()
 			vector(r{7},r{8},r{9}, r{0},r{0},r{1})
 	)).mutant_clone(&vector<r,6>::last<3>);
 	assert ( vector(r{2},r{0},r{3})(inverse) ==
-		vector(r{17,5}, r{-4,5}, r{-8,5}));
+		vector(r{17,5}, r{-4,5}, r{-8,5}) );
 
 	assert( gauss_jordan_elimination(
 		vector(

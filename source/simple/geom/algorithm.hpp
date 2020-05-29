@@ -52,6 +52,19 @@ namespace simple::geom
 			 std::forward<Function>(callback));
 	}
 
+	template <typename Coordinate, size_t Dimensions, typename Order, typename Function>
+	constexpr void loop
+	(
+		const vector<Coordinate, Dimensions, Order>& upper,
+		Function&& callback
+	)
+	{
+		using vector = vector<Coordinate, Dimensions, Order>;
+		vector index{};
+		loop_on(index, vector::zero(),  upper, vector::one(),
+			 std::forward<Function>(callback));
+	}
+
 	template <typename Coordinate, size_t Dimensions, typename Order, typename Function, size_t LoopDimesntions>
 	constexpr void loop_on
 	(
@@ -107,6 +120,23 @@ namespace simple::geom
 		}
 		return m;
 	}
+
+	template <typename Transform, typename Vector, typename AnotherCoord, typename Result>
+	[[nodiscard]] constexpr Result
+	deep_mutant_clone(const Vector& vector, Transform&& transform)
+	{
+		Result result{};
+		loop(Vector::meta::template dimensions<>, [&](auto i)
+		{
+			// std::invoke is not constexpr -_-
+			result[i] = std::apply(
+				std::forward<Transform>(transform),
+				std::forward_as_tuple(vector[i])
+			);
+		});
+		return result;
+	}
+
 
 } // namespace simple::geom
 

@@ -17,17 +17,6 @@
 namespace simple::geom
 {
 
-	namespace detail
-	{
-		class disjunctive_bool {
-			bool value = false;
-			public:
-			constexpr disjunctive_bool() noexcept = default;
-			constexpr disjunctive_bool(const bool& value) noexcept : value(value) {};
-			constexpr operator bool() const noexcept{ return value; }
-		};
-	} // namespace detail
-
 	template <typename Coordinate = float, size_t Dimensions = 2,
 			typename Order = std::make_index_sequence<Dimensions>,
 			std::enable_if_t<Order::size() == Dimensions>* = nullptr>
@@ -92,6 +81,9 @@ namespace simple::geom
 			public:
 			template <typename SizeType = size_t, size_t Depth = meta::depth()> // have to explicitly qualify for depth gcc-7
 			static constexpr vector<SizeType,Depth> dimensions = get_dimensions<SizeType,Depth>();
+
+			// this little convenience crashes all clangs currently supporting c++17 (5,6,7,8,9,10)
+			// static constexpr auto size = dimensions<>;
 
 			// unused typename to work around gcc bug
 			// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85282
@@ -259,9 +251,10 @@ namespace simple::geom
 		// TODO: constexpr and forwarding
 		template <typename Another, is_convertible_to_me<Another>* = nullptr,
 		std::enable_if_t<std::is_same_v<typename Another::order, Order>> *...>
-		explicit vector(const Another& another)
+		constexpr explicit vector(const Another& another) : raw{}
 		{
-			std::copy(another.begin(), another.end(), begin());
+			for(size_t i = 0; i < Dimensions; ++i)
+				raw[i] = another[i];
 		}
 
 		// TODO: forwarding
@@ -390,62 +383,7 @@ namespace simple::geom
 			return result;
 		}
 
-		template <typename C = typename meta::coordinate_type, size_t D = Dimensions,
-			std::enable_if_t<std::is_same_v<C,bool> && (D != 1)>* = nullptr>
-		[[nodiscard]]
-		constexpr explicit operator bool() const noexcept
-		{
-			for(auto&& c : raw)
-				if(!c) return false;
-			return true;
-		}
-
-		template <typename C = typename meta::coordinate_type,
-			std::enable_if_t<std::is_same_v<C,detail::disjunctive_bool>>* = nullptr>
-		[[nodiscard]]
-		constexpr explicit operator bool() const noexcept
-		{
-			for(auto&& c : raw)
-				if(c) return true;
-			return false;
-		}
-
-		using bool_vector = map_coordinate_t<bool>;
-		using disjunctive_bool_vector = map_coordinate_t<detail::disjunctive_bool>;
-
-		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>
-		constexpr vector(const disjunctive_bool_vector& another) noexcept
-		{
-			for(size_t i = 0; i < Dimensions; ++i)
-				raw[i] = another[i];
-		}
-		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,detail::disjunctive_bool>>* = nullptr>
-		constexpr vector(const bool_vector& another) noexcept
-		{
-			for(size_t i = 0; i < Dimensions; ++i)
-				raw[i] = another[i];
-		}
-
-
-#define SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(op, return_type) \
-		[[nodiscard]] \
-		constexpr return_type operator op(const vector & another) const \
-		{ \
-			return_type ret{}; \
-			for(size_t i = 0; i < Dimensions; ++i) \
-				ret[i] = (raw[i] op another.raw[i]); \
-			return ret; \
-		}
-
-// NOTE: some day, in some very cool piece of super generic code, i'm going to regret making != inconsistent with the rest aren't i?... and the super decaying secret disjunctive vector is going to give me problems in some perfectly normal code too, isn't it? well i'll enjoy this while i can...
-SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(==, bool_vector)
-SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(!=, disjunctive_bool_vector)
-SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(>, bool_vector)
-SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(>=, bool_vector)
-SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<, bool_vector)
-SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
-#undef SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR
-
+		// NOTE: emmm... ok??
 		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>
 		[[nodiscard]]
 		friend
@@ -508,10 +446,10 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 			return operator[](index[0]);
 		}
 
-		template <typename IndexType, size_t Size, size_t Depth = Size, typename O,
+		template <typename IndexType, size_t Size, typename O, size_t Depth = Size,
 			std::enable_if_t<(Depth > 1)>* = nullptr>
 		[[nodiscard]]
-		constexpr const auto & operator[](vector<IndexType,Size> index) const&
+		constexpr const auto & operator[](vector<IndexType,Size,O> index) const&
 		{
 			return raw[index[Depth - 1]]
 				.template operator[]<IndexType, Size, O, Depth-1>(index);
@@ -879,6 +817,7 @@ SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(<=, bool_vector)
 	}
 
 	// for ADL to find these
+	using ::operator~;
 	using ::operator+;
 	using ::operator-;
 	using ::operator*;
@@ -996,5 +935,6 @@ class std::numeric_limits<simple::geom::vector<T,C,O>>
 	}
 };
 
+#include "bool_algebra.hpp" // oof TODO: comparison ops are here now, though some would say not having them is a blessing, that would be a breaking change...
 
 #endif /* end of include guard */
