@@ -398,6 +398,11 @@ void DiscreteArithmetic()
 	assert( ~vector(true, false, true, false) == vector(false, true, false, true) );
 	assert( ~vector(true, true, false, false) == vector(false, false, true, true) );
 	assert( ~vector(true, true, true, true) == vector(false, false, false, false) );
+
+	// ! for vector<bool>
+	assert( (!vector(true, false, true, false)) == vector(false, true, false, true) );
+	assert( (!vector(true, true, false, false)) == vector(false, false, true, true) );
+	assert( (!vector(true, true, true, true)) == vector(false, false, false, false) );
 }
 
 void ComparisonOperators()

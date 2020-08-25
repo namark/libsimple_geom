@@ -393,6 +393,16 @@ namespace simple::geom
 				one[i] = !one[i];
 			return one;
 		}
+		template <typename C = typename meta::coordinate_type,
+			std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>
+		[[nodiscard]]
+		friend
+		constexpr vector operator !(vector one) noexcept
+		{
+			for(size_t i = 0; i < Dimensions; ++i)
+				one[i] = !one[i];
+			return one;
+		}
 
 		template <size_t dimension>
 		[[nodiscard]]
