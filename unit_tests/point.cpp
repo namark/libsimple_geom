@@ -1,6 +1,7 @@
 #include "simple/geom/vector.hpp"
 #include <cmath>
 #include <cassert>
+#include <cstdio>
 
 using namespace simple;
 using geom::vector;
@@ -452,6 +453,25 @@ void CoordinateOrder()
 	assert( int4(p_wzyx) == int4(4,3,2,1) );
 }
 
+void DefyPromotion()
+{
+	using puny = unsigned short;
+	using vuny = vector<unsigned short,1>;
+	if constexpr (sizeof(puny) < sizeof(decltype(puny{} + puny{})))
+	{
+		puny p{1};
+		vuny v{p};
+		assert( puny( -p >> 1 ) == puny(-p) );
+		assert( vuny( -v >> 1 ) != vuny(-v) );
+		assert( puny( -p >> 1 ) != -p >> 1 );
+		assert( vuny( -v >> 1 ) == -v >> 1 );
+	}
+	else
+	{
+		std::puts("Type not puny enough, to test promotion defiance!");
+	}
+};
+
 constexpr void Constexprness() // TODO: needs better coverage
 {
 	constexpr int4 p = int4(1,2,3,4);
@@ -481,6 +501,7 @@ int main()
 	NumericLimits();
 	CoordinateOrder();
 	Constexprness();
+	DefyPromotion();
 	return 0;
 }
 
