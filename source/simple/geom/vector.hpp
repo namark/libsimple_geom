@@ -125,10 +125,10 @@ namespace simple::geom
 		{
 			non_index = std::numeric_limits<size_t>::max(),
 			new_index = non_index,
-			x_index = support::car<Order, 0>(non_index),
-			y_index = support::car<Order, 1>(non_index),
-			z_index = support::car<Order, 2>(non_index),
-			w_index = support::car<Order, 3>(non_index)
+			x_index = support::car<Order, 0, non_index>,
+			y_index = support::car<Order, 1, non_index>,
+			z_index = support::car<Order, 2, non_index>,
+			w_index = support::car<Order, 3, non_index>
 		};
 
 		template <size_t index>
@@ -409,7 +409,7 @@ namespace simple::geom
 		constexpr const coordinate_type & get() const&
 		{
 			static_assert(dimension < Dimensions);
-			constexpr size_t index = support::car<Order, dimension>();
+			constexpr size_t index = support::car<Order, dimension>;
 			return raw[index];
 		}
 
@@ -418,7 +418,7 @@ namespace simple::geom
 		constexpr coordinate_type & get() &
 		{
 			static_assert(dimension < Dimensions);
-			constexpr size_t index = support::car<Order, dimension>();
+			constexpr size_t index = support::car<Order, dimension>;
 			return raw[index];
 		}
 
