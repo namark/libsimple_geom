@@ -403,6 +403,23 @@ void DiscreteArithmetic()
 	assert( (!vector(true, false, true, false)) == vector(false, true, false, true) );
 	assert( (!vector(true, true, false, false)) == vector(false, false, true, true) );
 	assert( (!vector(true, true, true, true)) == vector(false, false, false, false) );
+
+	// ~ for vector<vector<bool>>
+	assert( (~vector(vector(true, false), vector(true, false))) ==
+		vector(vector(false, true), vector(false, true)) );
+	assert( (~vector(vector(true, true), vector(false, false))) ==
+		vector(vector(false, false), vector(true, true)) );
+	assert( (~vector(vector(true, true), vector(true, true))) ==
+		vector(vector(false, false), vector(false, false)) );
+
+	// ! for vector<vector<bool>>
+	assert( (!vector(vector(true, false), vector(true, false))) ==
+		vector(vector(false, true), vector(false, true)) );
+	assert( (!vector(vector(true, true), vector(false, false))) ==
+		vector(vector(false, false), vector(true, true)) );
+	assert( (!vector(vector(true, true), vector(true, true))) ==
+		vector(vector(false, false), vector(false, false)) );
+
 }
 
 void ComparisonOperators()
@@ -456,6 +473,12 @@ void CoordinateOrder()
 	assert( p_wzyx[2] == 3 );
 	assert( p_wzyx[3] == 4 );
 	assert( int4(p_wzyx) == int4(4,3,2,1) );
+
+	auto [x,y,z,w] = p_wzyx;
+	assert( x == p_wzyx.x() );
+	assert( y == p_wzyx.y() );
+	assert( z == p_wzyx.z() );
+	assert( w == p_wzyx.w() );
 }
 
 void DefyPromotion()

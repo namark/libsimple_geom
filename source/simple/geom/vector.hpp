@@ -17,13 +17,37 @@
 namespace simple::geom
 {
 
-	template <typename Coordinate = float, size_t Dimensions = 2,
+	template <typename Type, size_t Size>
+	struct vector_array
+	{
+		using type = support::array<Type, Size>;
+	};
+
+	template <typename Type, size_t Size>
+	using vector_array_t = typename vector_array<Type, Size>::type;
+
+	// TODO; in an optional header
+	// template <size_t Size>
+	// struct vector_array<unsigned int, Size>
+	// {
+	// 	using value_type = unsigned int;
+	// 	typedef value_type type __attribute__ ((vector_size (Size * sizeof(value_type))));
+	// };
+    //
+	// template <size_t Size>
+	// struct vector_array<int, Size>
+	// {
+	// 	using value_type = int;
+	// 	typedef value_type type __attribute__ ((vector_size (Size * sizeof(value_type))));
+	// };
+
+	template <typename Coordinate, size_t Dimensions,
 			typename Order = std::make_index_sequence<Dimensions>,
 			std::enable_if_t<Order::size() == Dimensions>* = nullptr>
 	class vector
 	{
 		public:
-		using array = support::array<Coordinate, Dimensions>;
+		using array = vector_array_t<Coordinate, Dimensions>;
 		using coordinate_type = Coordinate;
 		using order = Order;
 		using value_type = Coordinate;
@@ -410,7 +434,7 @@ namespace simple::geom
 		{
 			static_assert(dimension < Dimensions);
 			constexpr size_t index = support::car<Order, dimension>;
-			return raw[index];
+			return (*this)[index];
 		}
 
 		template <size_t dimension>
@@ -419,18 +443,50 @@ namespace simple::geom
 		{
 			static_assert(dimension < Dimensions);
 			constexpr size_t index = support::car<Order, dimension>;
-			return raw[index];
+			return (*this)[index];
 		}
 
+		template <size_t dimension>
 		[[nodiscard]]
-		constexpr const coordinate_type & operator[](size_t dimension) const&
+		constexpr coordinate_type && get() &&
+		{
+			static_assert(dimension < Dimensions);
+			constexpr size_t index = support::car<Order, dimension>;
+			return std::move(*this)[index];
+		}
+
+		template <size_t dimension>
+		[[nodiscard]]
+		constexpr const coordinate_type && get() const&&
+		{
+			static_assert(dimension < Dimensions);
+			constexpr size_t index = support::car<Order, dimension>;
+			return (*this)[index];
+		}
+
+		[[nodiscard]] constexpr const coordinate_type &
+		operator[](size_t dimension) const&
 		{
 			assert(dimension < Dimensions);
 			return raw[dimension];
 		}
 
-		[[nodiscard]]
-		constexpr coordinate_type & operator[](size_t dimension) &
+		[[nodiscard]] constexpr coordinate_type &
+		operator[](size_t dimension) &
+		{
+			assert(dimension < Dimensions);
+			return raw[dimension];
+		}
+
+		[[nodiscard]] constexpr coordinate_type &&
+		operator[](size_t dimension) &&
+		{
+			assert(dimension < Dimensions);
+			return std::move(raw[dimension]);
+		}
+
+		[[nodiscard]] constexpr const coordinate_type &&
+		operator[](size_t dimension) const&&
 		{
 			assert(dimension < Dimensions);
 			return raw[dimension];
@@ -472,19 +528,19 @@ namespace simple::geom
 			return raw[index[0]];
 		}
 
-		[[nodiscard]] constexpr auto begin() noexcept { return std::begin(raw); }
-		[[nodiscard]] constexpr auto end() noexcept { return std::end(raw); }
-		[[nodiscard]] constexpr auto begin() const noexcept { return std::cbegin(raw); }
-		[[nodiscard]] constexpr auto end() const noexcept { return std::cend(raw); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept { return std::cbegin(raw); }
-		[[nodiscard]] constexpr auto cend() const noexcept { return std::cend(raw); }
+		[[nodiscard]] constexpr auto begin()  noexcept       { using std::begin;  return begin(raw);  }
+		[[nodiscard]] constexpr auto end()    noexcept       { using std::end;    return end(raw);    }
+		[[nodiscard]] constexpr auto begin()  const noexcept { using std::cbegin; return cbegin(raw); }
+		[[nodiscard]] constexpr auto end()    const noexcept { using std::cend;   return cend(raw);   }
+		[[nodiscard]] constexpr auto cbegin() const noexcept { using std::cbegin; return cbegin(raw); }
+		[[nodiscard]] constexpr auto cend()   const noexcept { using std::cend;   return cend(raw);   }
 
-		[[nodiscard]] constexpr auto rbegin() noexcept { return std::rbegin(raw); }
-		[[nodiscard]] constexpr auto rend() noexcept { return std::rend(raw); }
-		[[nodiscard]] constexpr auto rbegin() const noexcept { return std::crbegin(raw); }
-		[[nodiscard]] constexpr auto rend() const noexcept { return std::crend(raw); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept { return std::crbegin(raw); }
-		[[nodiscard]] constexpr auto crend() const noexcept { return std::crend(raw); }
+		[[nodiscard]] constexpr auto rbegin()  noexcept       { using std::rbegin;  return rbegin(raw);  }
+		[[nodiscard]] constexpr auto rend()    noexcept       { using std::rend;    return rend(raw);    }
+		[[nodiscard]] constexpr auto rbegin()  const noexcept { using std::crbegin; return crbegin(raw); }
+		[[nodiscard]] constexpr auto rend()    const noexcept { using std::crend;   return crend(raw);   }
+		[[nodiscard]] constexpr auto crbegin() const noexcept { using std::crbegin; return crbegin(raw); }
+		[[nodiscard]] constexpr auto crend()   const noexcept { using std::crend;   return crend(raw);   }
 
 		constexpr vector& min(const vector& other)
 		{
@@ -890,6 +946,20 @@ namespace simple::geom
 	template <typename C, size_t D, typename O, void* SFINAE> vector(vector<C,D,O,SFINAE>)
 		-> vector<vector<C,D,O,SFINAE>,1>;
 
+	template <typename>
+	struct is_vector_instance : public std::false_type {};
+
+	template <typename C, size_t D, typename O>
+	struct is_vector_instance<vector<C,D,O>> : public std::true_type {};
+
+	template <typename V>
+	constexpr auto is_vector_instance_v = is_vector_instance<V>::value;
+
+	template <size_t I, typename V,
+		std::enable_if_t<is_vector_instance_v<std::decay_t<V>>>* = nullptr>
+	constexpr decltype(auto) get(V&& v)
+	{ return std::forward<V>(v).template get<I>(); }
+
 } // namespace simple::geom
 
 namespace simple
@@ -943,6 +1013,16 @@ class std::numeric_limits<simple::geom::vector<T,C,O>>
 			c = limits::max();
 		return m;
 	}
+};
+
+template <typename C, size_t D, typename O>
+struct std::tuple_size<simple::geom::vector<C,D,O>> :
+	std::integral_constant<size_t, D> {};
+
+template <size_t I, typename C, size_t D, typename O>
+struct std::tuple_element<I, simple::geom::vector<C,D,O>>
+{
+	using type = C;
 };
 
 #include "bool_algebra.hpp" // oof TODO: comparison ops are here now, though some would say not having them is a blessing, that would be a breaking change...
