@@ -4,7 +4,8 @@
 
 #include <functional>
 
-#include "simple/support/algorithm.hpp"
+#include "simple/support/function_utils.hpp"
+#include "simple/support/algorithm/utils.hpp"
 
 namespace simple::geom
 {
@@ -20,7 +21,7 @@ namespace simple::geom
 	)
 	{
 		if constexpr (LoopDimesntions == 0)
-			std::invoke(std::forward<Function>(callback),index);
+			support::invoke(std::forward<Function>(callback),index);
 		else
 		{
 			constexpr size_t I = LoopDimesntions-1;
@@ -33,7 +34,7 @@ namespace simple::geom
 			{
 				loop_on<Coordinate,Dimensions,Order,Function,I>
 					(index, lower, upper, step,
-					 std::forward<Function>(callback));
+					std::forward<Function>(callback));
 			}
 		}
 	};
@@ -49,7 +50,7 @@ namespace simple::geom
 	{
 		vector<Coordinate, Dimensions, Order> index{};
 		loop_on(index, lower, upper, step,
-			 std::forward<Function>(callback));
+			std::forward<Function>(callback));
 	}
 
 	template <typename Coordinate, size_t Dimensions, typename Order, typename Function>
@@ -62,7 +63,7 @@ namespace simple::geom
 		using vector = vector<Coordinate, Dimensions, Order>;
 		vector index{};
 		loop_on(index, vector::zero(),  upper, vector::one(),
-			 std::forward<Function>(callback));
+			std::forward<Function>(callback));
 	}
 
 	template <typename Coordinate, size_t Dimensions, typename Order, typename Function, size_t LoopDimesntions>
@@ -75,7 +76,7 @@ namespace simple::geom
 	)
 	{
 		loop_on(index, bounds.lower(), bounds.upper(), step,
-			 std::forward<Function>(callback));
+			std::forward<Function>(callback));
 	}
 
 	template <typename Coordinate, size_t Dimensions, typename Order, typename Function>
@@ -88,7 +89,20 @@ namespace simple::geom
 	{
 		vector<Coordinate, Dimensions, Order> index{};
 		loop_on(index, bounds, step,
-			 std::forward<Function>(callback));
+			std::forward<Function>(callback));
+	}
+
+	template <typename Coordinate, size_t Dimensions, typename Order, typename Function>
+	constexpr void loop
+	(
+		const support::range<vector<Coordinate, Dimensions, Order>>& bounds,
+		Function&& callback
+	)
+	{
+		using vector = vector<Coordinate, Dimensions, Order>;
+		vector index{};
+		loop_on(index, bounds, vector::one(),
+			std::forward<Function>(callback));
 	}
 
 	template <typename Coordinate,
@@ -128,10 +142,9 @@ namespace simple::geom
 		Result result{};
 		loop(Vector::meta::template dimensions<>, [&](auto i)
 		{
-			// std::invoke is not constexpr -_-
-			result[i] = std::apply(
+			result[i] = support::invoke(
 				std::forward<Transform>(transform),
-				std::forward_as_tuple(vector[i])
+				vector[i]
 			);
 		});
 		return result;

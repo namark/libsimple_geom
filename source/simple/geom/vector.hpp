@@ -13,6 +13,7 @@
 #include "simple/support/array.hpp"
 #include "simple/support/array_utils.hpp"
 #include "simple/support/array_operators.hpp"
+#include "simple/support/function_utils.hpp"
 
 namespace simple::geom
 {
@@ -340,10 +341,9 @@ namespace simple::geom
 			vector<AnotherCoord, Dimensions> another{};
 			for(size_t i = 0; i < Dimensions; ++i)
 			{
-				// std::invoke is not constexpr -_-
-				another[i] = std::apply(
+				another[i] = support::invoke(
 					std::forward<Function>(transform),
-					std::forward_as_tuple((*this)[i])
+					(*this)[i]
 				);
 			}
 			return another;
