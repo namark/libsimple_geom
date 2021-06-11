@@ -32,6 +32,7 @@ namespace simple::geom
 		}
 	};
 
+	// TODO: guess need to support compatibility_tag from support/array_operators.hpp :/
 #define SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(op, reduce_method) \
 	template <typename C, size_t D, typename O, \
 		typename Bool = \

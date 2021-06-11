@@ -107,6 +107,9 @@ namespace simple::geom
 			static constexpr vector<SizeType,Depth> dimensions = get_dimensions<SizeType,Depth>();
 
 			// this little convenience crashes all clangs currently supporting c++17 (5,6,7,8,9,10)
+			// update: clang 11.1.0 - complains about dublicate member "dimensions", previous delared on the same line -_-
+			// seems like it's caused by the recvustion of vector::meta::size::meta::size::meta::size... which are all vector<size_t,1>s,
+			// but gcc is ok with it, and why wouldn't it be??
 			// static constexpr auto size = dimensions<>;
 
 			// unused typename to work around gcc bug
@@ -122,7 +125,17 @@ namespace simple::geom
 
 			using coordinate_type = typename get_coordinate<void, depth()>::type;
 
+			// ffs this crashes clang 11.1.0 on bool_algebra operator* -_-
+			// template <typename Indices> struct size_of_depths {};
+			// template <size_t... I> struct size_of_depths<std::index_sequence<I...>>
+			// {
+			// 	using type = std::index_sequence<meta::dimensions<>[I]...>;
+			// };
+
 		};
+
+		// template <typename Indices = std::make_index_sequence<meta::depth()>>
+		// using shape = typename meta::template size_of_depths<Indices>::type;
 
 		template <typename NewCoord, typename Meta = meta, typename Enabled = void>
 		struct map_coordinate;
@@ -408,6 +421,9 @@ namespace simple::geom
 		}
 
 		// NOTE: emmm... ok??
+		// emmm yes, this is ok, bitwise not on a bool is a warning anyways, so in context of vector we make it elementwise logical not,
+		// as that logicaly behaves similar to bitwise not on flags
+		// what? you prefer it promoting to int? a freakin signed int?! gtfo!
 		template <typename C = Coordinate, std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>
 		[[nodiscard]]
 		friend
@@ -417,9 +433,15 @@ namespace simple::geom
 				one[i] = !one[i];
 			return one;
 		}
+
+		// now this is the one I would say is kind of dubious, because it creates an expectation of proper boolean logic, but it's not.
+		// not sure why I have this, other than the consistency with other elementwise operations,
+		// maybe it was different at some point, but right now removing this breaks nothing but a couple targeted unit tests.
+		// note that comparison ops return a reduction type, not vector<bool,D>,
+		// and nothing promotes to bool or anything like that, so this shouldn't bite you unless you ask for it
 		template <typename C = typename meta::coordinate_type,
 			std::enable_if_t<std::is_same_v<C,bool>>* = nullptr>
-		[[nodiscard]]
+		[[nodiscard]] [[deprecated("use operator~ instead")]]
 		friend
 		constexpr vector operator !(vector one) noexcept
 		{
@@ -598,6 +620,7 @@ namespace simple::geom
 			return *this;
 		}
 
+		// TODO: might not be representable so concider return type deduction -_-
 		constexpr vector& abs()
 		{
 			using std::abs;
@@ -636,6 +659,7 @@ namespace simple::geom
 			return sqrt(magnitude());
 		}
 
+		// TODO: concider return type deduction for these as well -_-
 		constexpr vector & operator++()
 		{
 			for(auto& coord : raw) ++coord;
@@ -681,6 +705,7 @@ namespace simple::geom
 		template <typename T>
 		using product_result = typename product_result_s<T>::type;
 
+		// TODO: gotta deduce return coordinate type now that we're doing it -_-
 		// matrix multiplication and matrix-vector multiplication/dot product fusion mutant operator
 		template<typename AnotherComponent, size_t AnotherDimesnions, typename AnotherOrder,
 			std::enable_if_t<std::is_same_v<Order,AnotherOrder> || can_apply<AnotherComponent>>* = nullptr,
@@ -960,6 +985,22 @@ namespace simple::geom
 	constexpr decltype(auto) get(V&& v)
 	{ return std::forward<V>(v).template get<I>(); }
 
+	// implementing this and similar things as part of vector class crashes clang
+	// see meta class above
+	template<typename Vector>
+	struct vector_traits
+	{
+		using vector = Vector;
+		using meta = typename vector::meta;
+		template <typename Indices> struct size_of_depths {};
+		template <size_t... I> struct size_of_depths<std::index_sequence<I...>>
+		{
+			using type = std::index_sequence<meta::template dimensions<>[I]...>;
+		};
+
+		using shape = typename size_of_depths<std::make_index_sequence<meta::depth()>>::type;
+	};
+
 } // namespace simple::geom
 
 namespace simple
@@ -970,9 +1011,31 @@ namespace simple
 	{
 		constexpr static auto enabled_operators = array_operator::all;
 		constexpr static auto enabled_right_element_operators = array_operator::binary | array_operator::in_place;
-		constexpr static auto enabled_left_element_operators = array_operator::binary
-			^ array_operator::lshift
-			^ array_operator::rshift;
+		constexpr static auto enabled_left_element_operators = []()
+		{
+
+			// workaround for a bug in gcc
+			// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101004
+			if constexpr (D == 1)
+				return array_operator::binary | array_operator::in_place;
+			else
+				return array_operator::binary
+					^ array_operator::lshift
+					^ array_operator::rshift;
+		}();
+
+		template <typename T, array_operator op, typename Other> using result = geom::vector<
+			std::conditional_t<std::is_same_v<C,bool> && std::is_same_v<Other,bool> &&
+				(op && array_operator::bitwise),
+				C, T>,
+			D,O>;
+
+		// initially went with geom::vector_traits<geom::vector<C,D,O>>::shape
+		// but then couldn't add a column vector Nx1 to a matrix NxM, so ended up with this,
+		// it's a bit arbitrary though, doesn't have a name, feels fragile
+		using compatibility_tag = std::tuple<O,
+			std::index_sequence<D, geom::vector<C,D,O>::meta::depth()>
+		>;
 	};
 } // namespace simple
 

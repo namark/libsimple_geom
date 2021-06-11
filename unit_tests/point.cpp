@@ -21,6 +21,7 @@ void ZeroConstruction()
 	assert(control == static_cast<const float4::array>(float4::zero()));
 
 	// NOTE: can't really test for random garbage since random garbage can be anything, including all zeros
+	// also UB, great -_-
 	bool anyGarbage = false;
 	std::array<float4, 100> garbagePile;
 	for (auto& garbage : garbagePile)
@@ -303,6 +304,8 @@ void Arithmetic()
 
 }
 
+// discrete? what?
+// TODO: used unsigned and if constexpr guard implied sizes
 void DiscreteArithmetic()
 {
 	// %
@@ -449,8 +452,8 @@ void NumericLimits()
 	using limits = std::numeric_limits<int4>;
 	using coordLimits = std::numeric_limits<int4::coordinate_type>;
 	static_assert(limits::is_specialized);
-	static_assert(limits::max() == int4::one()*coordLimits::max());
-	static_assert(limits::min() == int4::one()*coordLimits::min());
+	static_assert(limits::max() == int4::one(coordLimits::max()));
+	static_assert(limits::min() == int4::one(coordLimits::min()));
 }
 
 void CoordinateOrder()
@@ -481,26 +484,73 @@ void CoordinateOrder()
 	assert( w == p_wzyx.w() );
 }
 
+// not absolutely insane unsigned short
+struct naius
+{
+	unsigned short val;
+};
+bool operator==(naius a, naius b) { return a.val == b.val; }
+bool operator!=(naius a, naius b) { return !(a == b); }
+naius operator-(naius a)
+{
+	auto promoted = -unsigned(a.val);
+	return naius{(unsigned short)promoted};
+}
+naius operator>>(naius a, int shift)
+{
+	auto promoted = unsigned(a.val) << shift;
+	return naius{(unsigned short)promoted};
+}
+unsigned operator*(naius a, naius b)
+{
+	return unsigned(a.val) * unsigned(b.val);
+}
+
 void DefyPromotion()
 {
-	using puny = unsigned short;
-	using vuny = vector<unsigned short,1>;
-	if constexpr (sizeof(puny) < sizeof(decltype(puny{} + puny{})))
+	using puny = unsigned short; // bad
+	using buny = vector<puny,1>; // used to be goodish but now bad
+	using vuny = vector<naius,1>; // good
+	if constexpr (sizeof(puny) < sizeof(decltype(-puny{})))
 	{
+		// TODO: this test also relies on 2's complement representation and sign extension -_-
 		puny p{1};
-		vuny v{p};
-		assert( puny( -p >> 1 ) == puny(-p) );
+		assert( puny( -p >> 1 ) == puny(-p) ); // this does not look equivalent at all!
+		assert( puny( -p >> 1 ) != -p >> 1 ); // and this does!
+
+		// same for vector
+		buny b{p};
+		assert( buny( -b >> 1 ) == buny(-b) );
+		// assert( buny( -b >> 1 ) != -b >> 1 ); // TODO: doesn't compile, since types are not same either... maybe should compile, since we're allowing promotion now
+
+		// all fixed by a sane element type
+		vuny v{naius{1}};
 		assert( vuny( -v >> 1 ) != vuny(-v) );
-		assert( puny( -p >> 1 ) != -p >> 1 );
 		assert( vuny( -v >> 1 ) == -v >> 1 );
+
+		// bonus multiplication, old goodish vector couldn't do this properly
+		if constexpr (sizeof(unsigned short)*2 == sizeof(unsigned) && sizeof(int) == sizeof(unsigned))
+		{
+			auto biggy = std::numeric_limits<puny>::max();
+			// assert( biggy * biggy < std::numeric_limits<int>::max() ); // instaUB
+
+			naius nicey{biggy};
+			assert( nicey * nicey > std::numeric_limits<int>::max() ); // all fine and dandy
+
+			vuny vicey{nicey};
+			assert(( vicey * vicey > vector<unsigned, 1>{{std::numeric_limits<int>::max()}} )); // vector respec sanity
+
+			[[maybe_unused]] buny buggy{biggy};
+			// assert(( buggy * buggy < vector(std::numeric_limits<int>::max()) )); // as well as insanity -_-
+		}
+		else
+			std::puts("what a world we live in~");
 	}
 	else
-	{
 		std::puts("Type not puny enough, to test promotion defiance!");
-	}
 };
 
-constexpr void Constexprness() // TODO: needs better coverage
+constexpr bool Constexprness() // TODO: needs better coverage
 {
 	constexpr int4 p = int4(1,2,3,4);
 	constexpr std::array<int, p[2]> arr = {1,2,3};
@@ -510,8 +560,233 @@ constexpr void Constexprness() // TODO: needs better coverage
 	static_assert(arr2.size() == 0, "Some other test should have caught this error.");
 	static_assert(arr3[0] == 13, "Some other test should have caught this error.");
 	assert(arr[2] == 3); // redundant check;
+
+	return true;
 }
 
+void ValueCategoryOfGet()
+{
+	using std::get;
+
+	vector a(1,2,3);
+	static_assert(std::is_same_v<decltype(( get<0>(a) )), int&>);
+	static_assert(std::is_same_v<decltype(( a[0] )), int&>);
+	static_assert(std::is_same_v<decltype(( a.x() )), int&>);
+
+	static_assert(std::is_same_v<decltype(( get<0>(vector(1,2,3)) )), int&&>);
+	static_assert(std::is_same_v<decltype(( vector(1,2,3)[0] )), int&&>);
+	// static_assert(std::is_same_v<decltype(( vector(1,2,3).x() )), int&&>); // TODO
+
+	vector b(vector(1,2),vector(3,4));
+	static_assert(std::is_same_v<decltype(( get<0>(b) )), vector<int,2>&>);
+	static_assert(std::is_same_v<decltype(( get<1>(get<0>(b)) )), int&>);
+	static_assert(std::is_same_v<decltype(( b[0] )), vector<int,2>&>);
+	static_assert(std::is_same_v<decltype(( b[0][0] )), int&>);
+
+	static_assert(std::is_same_v<decltype(( get<0>(
+		vector(vector(1,2),vector(3,4))
+	) )), vector<int,2>&&>);
+	static_assert(std::is_same_v<decltype(( get<1>(get<0>(
+		vector(vector(1,2),vector(3,4))
+	)) )), int&&>);
+	static_assert(std::is_same_v<
+		decltype(( vector(vector(1,2),vector(3,4))[0] )),
+		vector<int,2>&&>);
+	static_assert(std::is_same_v<
+		decltype(( vector(vector(1,2),vector(3,4))[0][1] )),
+		int&&>);
+}
+
+void EmbracePromotion()
+{
+	using short3 = vector<short, 3>;
+	short3 a {{1,2,3}}, b {{4,5,6}};
+
+	auto c = a + b;
+	assert((c == vector(5,7,9)));
+	static_assert( std::is_same_v<decltype(c), vector<int,3>> );
+	auto d = short3(a + b);
+	assert((d == short3{{5,7,9}}));
+	static_assert( std::is_same_v<decltype(d), short3> );
+	auto e = a + a + b;
+	assert((e == vector(6,9,12)));
+	static_assert( std::is_same_v<decltype(e), vector<int,3>> );
+	d += a;
+	assert((d == short3{{6,9,12}}));
+	e += d;
+	assert((e == vector(12,18,24)));
+}
+
+template <typename E>
+class expr
+{
+	public:
+	operator int() const
+	{
+		return static_cast<const E&>(*this);
+	}
+};
+
+class expr_int : public expr<expr_int>
+{
+	int value;
+
+	public:
+    operator int() const { return value; }
+
+    expr_int(int value = int{}) : value(value) {}
+
+    template <typename E>
+    expr_int(expr<E> const& expr) : value{expr} {}
+};
+
+template <typename E1, typename E2>
+class expr_sum : public expr<expr_sum<E1, E2> > {
+    E1 const* left;
+    E2 const* right;
+
+public:
+    expr_sum() : left(), right() {}
+    expr_sum(E1 const& left, E2 const& right) : left(&left), right(&right) {}
+
+    operator int() const { return static_cast<int>(*left) + static_cast<int>(*right); }
+};
+
+template <typename E1, typename E2>
+expr_sum<E1, E2>
+operator+(expr<E1> const& left, expr<E2> const& right) {
+   return expr_sum<E1, E2>(*static_cast<const E1*>(&left), *static_cast<const E2*>(&right));
+}
+
+void ExpressionTemplates()
+{
+	using expr_vec = vector<expr_int, 2>;
+	expr_vec x{1,2};
+	expr_vec y{3,4};
+	vector<int,2> z (x + y + x);
+	assert(z == vector(5,8));
+}
+
+// TODO: all the other ops -_-
+void RowColumnVectorAndMatrix()
+{
+
+	const vector row(0.1f, 0.2f, 0.3f);
+
+	auto matrix = vector {
+		vector(1.0f, 2.0f, 3.0f),
+		vector(4.0f, 5.0f, 6.0f),
+		vector(7.0f, 8.0f, 9.0f),
+	};
+
+	assert(( matrix + row ==
+		vector{
+			vector(1.1f, 2.2f, 3.3f),
+			vector(4.1f, 5.2f, 6.3f),
+			vector(7.1f, 8.2f, 9.3f),
+		}
+	));
+	assert(( row + matrix ==
+		vector{
+			vector(1.1f, 2.2f, 3.3f),
+			vector(4.1f, 5.2f, 6.3f),
+			vector(7.1f, 8.2f, 9.3f),
+		}
+	));
+	matrix += row;
+	assert(( matrix ==
+		vector{
+			vector(1.1f, 2.2f, 3.3f),
+			vector(4.1f, 5.2f, 6.3f),
+			vector(7.1f, 8.2f, 9.3f),
+		}
+	));
+
+	const vector column{
+		vector(0.1f),
+		vector(0.2f),
+		vector(0.3f),
+	};
+
+	matrix = vector {
+		vector(1.0f, 2.0f, 3.0f),
+		vector(4.0f, 5.0f, 6.0f),
+		vector(7.0f, 8.0f, 9.0f),
+	};
+
+	assert(( matrix + column ==
+		vector{
+			vector(1.1f, 2.1f, 3.1f),
+			vector(4.2f, 5.2f, 6.2f),
+			vector(7.3f, 8.3f, 9.3f),
+		}
+	));
+
+	assert(( column + matrix ==
+		vector{
+			vector(1.1f, 2.1f, 3.1f),
+			vector(4.2f, 5.2f, 6.2f),
+			vector(7.3f, 8.3f, 9.3f),
+		}
+	));
+
+	matrix += column;
+	assert(( matrix ==
+		vector{
+			vector(1.1f, 2.1f, 3.1f),
+			vector(4.2f, 5.2f, 6.2f),
+			vector(7.3f, 8.3f, 9.3f),
+		}
+	));
+
+}
+
+void BoolBitwiseCorrections()
+{
+	// insanity check
+	static_assert(std::is_same_v<int, decltype(true & true)>);
+	static_assert(std::is_same_v<int, decltype(true | true)>);
+	static_assert(std::is_same_v<int, decltype(true ^ true)>);
+	// static_assert(std::is_same_v<int, decltype(~true)>); // this is kind of sane, but compiler warns so cleary shouldn't be used
+
+	// much saner vector -v-
+	static_assert(std::is_same_v<vector<bool,1>, decltype(vector(true) & vector(true))>);
+	static_assert(std::is_same_v<vector<bool,1>, decltype(vector(true) | vector(true))>);
+	static_assert(std::is_same_v<vector<bool,1>, decltype(vector(true) ^ vector(true))>);
+	static_assert(std::is_same_v<vector<bool,1>, decltype(~vector(true))>); // ok with vector, it's same as !
+	// note: in conditional expressions ~ is elementwise negation, while ! causes a reduction to plain bool (see bool_algebra.cpp)
+
+	// make sure we didn't break other things
+
+	// bit operations involving other types still promotes
+	static_assert(std::is_same_v<vector<int,1>, decltype(vector(true) & vector(1))>);
+	static_assert(std::is_same_v<vector<int,1>, decltype(vector(1) & vector(1))>);
+	static_assert(std::is_same_v<vector<int,1>, decltype(vector(true) | vector(1))>);
+	static_assert(std::is_same_v<vector<int,1>, decltype(vector(1) | vector(true))>);
+	static_assert(std::is_same_v<vector<int,1>, decltype(vector(true) ^ vector(1))>);
+	static_assert(std::is_same_v<vector<int,1>, decltype(vector(1) ^ vector(true))>);
+
+	// arithmetic still promotes
+	static_assert(std::is_same_v<vector<int,1>, decltype(vector(true) + vector(true))>);
+	static_assert(std::is_same_v<vector<int,1>, decltype(vector(true) - vector(true))>);
+	// TODO: not sure about these... multiplication is basically conjunction so maybe should return bool,
+	// division makes no sense, can only divide by 1, / is a no-op, % is constant 0, both still stay within bounds of bool though
+	static_assert(std::is_same_v<vector<int,1>, decltype(vector(true) * vector(true))>);
+	static_assert(std::is_same_v<vector<int,1>, decltype(vector(true) / vector(true))>);
+	static_assert(std::is_same_v<vector<int,1>, decltype(vector(true) % vector(true))>);
+
+}
+
+void BoolReductionImplicitConversion()
+{
+	vector x (1,2,3);
+	assert( x + (x == vector(1,1,1)) == vector(2,2,3) );
+	assert( (x == vector(1,1,1)) + x == vector(2,2,3) );
+	x += x == vector(1,1,1);
+	assert( x == vector(2,2,3) );
+	x = x == vector(2,2,2);
+	assert( x == vector(1,1,0) );
+}
 
 int main()
 {
@@ -528,8 +803,14 @@ int main()
 	DisabiguateOnConstructorParameterCount();
 	NumericLimits();
 	CoordinateOrder();
-	Constexprness();
 	DefyPromotion();
+	static_assert(Constexprness());
+	ValueCategoryOfGet();
+	EmbracePromotion();
+	ExpressionTemplates();
+	RowColumnVectorAndMatrix();
+	BoolBitwiseCorrections();
+	BoolReductionImplicitConversion();
 	return 0;
 }
 
