@@ -14,7 +14,7 @@ template <typename Vector>
 std::istream& operator>>(std::istream& is, Vector& v)
 {
 	for(auto&& c : v)
-		is >> c;
+		if(not (is >> c)) break;
 	return is;
 }
 
@@ -22,15 +22,11 @@ void SquareMatrixMultiplication()
 {
 	std::vector<int3x3> matrices;
 	std::ifstream test_data("square_matrix.data");
-	while(test_data)
-	{
-		int3x3 matrix;
-		test_data >> matrix;
+	int3x3 matrix;
+	while(test_data >> matrix)
 		matrices.push_back(matrix);
-	}
-	assert(matrices.size() > 3);
-	matrices.pop_back();
 
+	assert(matrices.size() > 3);
 	assert(matrices.size() % 3 == 0);
 	for(auto i = matrices.begin(); i != matrices.end(); i+=3)
 	{
