@@ -147,13 +147,13 @@ struct rational
 	{ return num * other.den == other.num * den; }
 
 	constexpr
-	rational operator+() { return *this; } const
-	constexpr
+	rational operator+() const { return *this; }
 
+	constexpr
 	rational operator*(const rational& other) const
 	{ return {num*other.num, den*other.den}; }
-	constexpr
 
+	constexpr
 	void normalize()
 	{
 		auto gcd = std::gcd(num, den);
