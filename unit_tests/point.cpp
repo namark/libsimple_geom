@@ -522,7 +522,7 @@ void DefyPromotion()
 		// same for vector
 		buny b{p,p};
 		assert( buny( -b >> 1 ) == buny(-b) );
-		// assert( buny( -b >> 1 ) != -b >> 1 ); // TODO: doesn't compile, since types are not same either... maybe should compile, since we're allowing promotion now
+		assert( buny( -b >> 1 ) != -b >> 1 );
 
 		// all fixed by a sane element type
 		vuny v{naius{1}};
