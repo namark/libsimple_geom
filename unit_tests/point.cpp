@@ -509,7 +509,8 @@ unsigned operator*(naius a, naius b)
 void DefyPromotion()
 {
 	using puny = unsigned short; // bad
-	using buny = vector<puny,1>; // used to be goodish but now bad
+	// NOTE: can no longer demonstrate buny of size 1, since it promotes and decays to element type when shifted and initializer list contructor catches the bad implicit cast
+	using buny = vector<puny,2>; // used to be goodish but now bad
 	using vuny = vector<naius,1>; // good
 	if constexpr (sizeof(puny) < sizeof(decltype(-puny{})))
 	{
@@ -519,7 +520,8 @@ void DefyPromotion()
 		assert( puny( -p >> 1 ) != -p >> 1 ); // and this does!
 
 		// same for vector
-		buny b{p};
+		buny b{p,p};
+		// TODO: now with on element ops it's even hard to demonstrate the subpar solution here, had to use an explicit cast
 		assert( buny( -b >> 1 ) == buny(-b) );
 		// assert( buny( -b >> 1 ) != -b >> 1 ); // TODO: doesn't compile, since types are not same either... maybe should compile, since we're allowing promotion now
 
@@ -540,8 +542,8 @@ void DefyPromotion()
 			vuny vicey{nicey};
 			assert(( vicey * vicey > vector<unsigned, 1>{{std::numeric_limits<int>::max()}} )); // vector respec sanity
 
-			[[maybe_unused]] buny buggy{biggy};
-			// assert(( buggy * buggy < vector(std::numeric_limits<int>::max()) )); // as well as insanity -_-
+			[[maybe_unused]] buny buggy{biggy, biggy};
+			// assert(( buggy * buggy < vector(std::numeric_limits<int>::max(),std::numeric_limits<int>::max()) )); // as well as insanity -_-
 		}
 		else
 			std::puts("what a world we live in~");
@@ -615,6 +617,9 @@ void EmbracePromotion()
 	assert((d == short3{{6,9,12}}));
 	e += d;
 	assert((e == vector(12,18,24)));
+
+	auto cc = a + 1;
+	static_assert( std::is_same_v<decltype(cc), vector<int,3>> );
 }
 
 template <typename E>
@@ -739,6 +744,44 @@ void RowColumnVectorAndMatrix()
 		}
 	));
 
+	assert
+	(
+		vector
+		(
+			vector(10),
+			vector(20),
+			vector(30)
+		)
+		+
+		vector(1,2,3)
+		==
+		vector
+		(
+			vector(11, 12, 13),
+			vector(21, 22, 23),
+			vector(31, 32, 33)
+		)
+	);
+
+	assert
+	(
+		vector(1,2,3)
+		+
+		vector
+		(
+			vector(10),
+			vector(20),
+			vector(30)
+		)
+		==
+		vector
+		(
+			vector(11, 12, 13),
+			vector(21, 22, 23),
+			vector(31, 32, 33)
+		)
+	);
+
 }
 
 void BoolBitwiseCorrections()
@@ -788,6 +831,13 @@ void BoolReductionImplicitConversion()
 	assert( x == vector(1,1,0) );
 }
 
+void OneDimentionalVectorDecays()
+{
+	using puny = short;
+	assert (vector(puny(1)) + puny(1) == 2);
+	static_assert( std::is_same_v<decltype(vector(puny(1)) + puny(1)), int> );
+}
+
 int main()
 {
 	ZeroConstruction();
@@ -811,6 +861,7 @@ int main()
 	RowColumnVectorAndMatrix();
 	BoolBitwiseCorrections();
 	BoolReductionImplicitConversion();
+	OneDimentionalVectorDecays();
 	return 0;
 }
 

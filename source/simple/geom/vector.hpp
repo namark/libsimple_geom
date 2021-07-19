@@ -286,6 +286,7 @@ namespace simple::geom
 			: raw {std::forward<Coordinates>(coordinates)...}
 		{}
 
+		// TODO: since operators now folow promotion rules of underlying type now, it might be more sensible to make construction/conversions do that too
 		// TODO: constexpr and forwarding
 		template <typename Another, is_convertible_to_me<Another>* = nullptr,
 		std::enable_if_t<std::is_same_v<typename Another::order, Order>> *...>
@@ -1009,6 +1010,12 @@ namespace simple
 	struct support::define_array_operators<geom::vector<C,D,O>> :
 	public support::trivial_array_accessor<geom::vector<C,D,O>, geom::vector<C,D,O>::dimensions>
 	{
+		template <typename V>
+		constexpr static bool has_scalar_shape = std::is_same_v<
+			typename geom::vector_traits<V>::shape,
+			std::index_sequence<1>
+		>;
+
 		constexpr static auto enabled_operators = array_operator::all;
 		constexpr static auto enabled_right_element_operators = array_operator::binary | array_operator::in_place;
 		constexpr static auto enabled_left_element_operators = []()
@@ -1016,7 +1023,7 @@ namespace simple
 
 			// workaround for a bug in gcc
 			// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101004
-			if constexpr (D == 1)
+			if constexpr (has_scalar_shape<geom::vector<C,D,O>>)
 				return array_operator::binary | array_operator::in_place;
 			else
 				return array_operator::binary
@@ -1024,11 +1031,24 @@ namespace simple
 					^ array_operator::rshift;
 		}();
 
-		template <typename T, array_operator op, typename Other> using result = geom::vector<
-			std::conditional_t<std::is_same_v<C,bool> && std::is_same_v<Other,bool> &&
+		template <typename T, bool Element>
+		using result_shape = std::conditional_t<
+			Element && has_scalar_shape<geom::vector<T,D,O>>,
+			T, geom::vector<T,D,O>
+		>;
+
+		template <typename T, array_operator op, typename Other, bool Element>
+		using result = result_shape
+		<
+			std::conditional_t
+			<
+				std::is_same_v<C,bool> &&
+				std::is_same_v<Other,bool> &&
 				(op && array_operator::bitwise),
-				C, T>,
-			D,O>;
+				C, T
+			>,
+			Element
+		>;
 
 		// initially went with geom::vector_traits<geom::vector<C,D,O>>::shape
 		// but then couldn't add a column vector Nx1 to a matrix NxM, so ended up with this,
