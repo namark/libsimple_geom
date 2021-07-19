@@ -34,13 +34,13 @@ namespace simple::geom
 
 	// TODO: guess need to support compatibility_tag from support/array_operators.hpp :/
 #define SIMPLE_GEOM_VECTOR_DEFINE_COMPARISON_OPERATOR(op, reduce_method) \
-	template <typename C, size_t D, typename O, \
+	template <typename C1, typename C2, size_t D, typename O, \
 		typename Bool = \
-			typename vector<C, D, O>::template map_coordinate_t<bool> \
+			typename vector<C1, D, O>::template map_coordinate_t<bool> \
 	> \
 	[[nodiscard]] \
 	constexpr reduction<reduce_method, Bool, bool> \
-	operator op(const vector<C,D,O>& one, const vector<C,D,O>& other) \
+	operator op(const vector<C1,D,O>& one, const vector<C2,D,O>& other) \
 	{ \
 		Bool ret{}; \
 		for(size_t i = 0; i < D; ++i) \
