@@ -521,7 +521,6 @@ void DefyPromotion()
 
 		// same for vector
 		buny b{p,p};
-		// TODO: now with on element ops it's even hard to demonstrate the subpar solution here, had to use an explicit cast
 		assert( buny( -b >> 1 ) == buny(-b) );
 		// assert( buny( -b >> 1 ) != -b >> 1 ); // TODO: doesn't compile, since types are not same either... maybe should compile, since we're allowing promotion now
 
